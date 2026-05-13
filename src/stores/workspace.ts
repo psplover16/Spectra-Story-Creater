@@ -1,5 +1,7 @@
 import { defineStore } from 'pinia'
 
+import type { CollaborationMode } from '@/types/collaboration'
+
 export interface ChapterTabState {
   chapterId: string
   title: string
@@ -15,6 +17,7 @@ interface WorkspaceState {
   workspaceRoot: string | null
   activeNovelName: string | null
   chapterTabs: ChapterTabState[]
+  collaborationMode: CollaborationMode | null
 }
 
 export const useWorkspaceStore = defineStore('workspace', {
@@ -22,6 +25,7 @@ export const useWorkspaceStore = defineStore('workspace', {
     workspaceRoot: null,
     activeNovelName: null,
     chapterTabs: [],
+    collaborationMode: null,
   }),
   getters: {
     hasUnsavedTabs: (state) => state.chapterTabs.some((t) => t.isDirty),
@@ -33,6 +37,20 @@ export const useWorkspaceStore = defineStore('workspace', {
     setActiveNovel(name: string | null): void {
       this.activeNovelName = name
       this.chapterTabs = []
+    },
+    setCollaborationMode(mode: CollaborationMode | null): void {
+      this.collaborationMode = mode
+    },
+    hydrate(snapshot: {
+      workspaceRoot?: string | null
+      activeNovelName?: string | null
+      collaborationMode?: CollaborationMode | null
+    }): void {
+      if (snapshot.workspaceRoot !== undefined) this.workspaceRoot = snapshot.workspaceRoot
+      if (snapshot.activeNovelName !== undefined) this.activeNovelName = snapshot.activeNovelName
+      if (snapshot.collaborationMode !== undefined) {
+        this.collaborationMode = snapshot.collaborationMode
+      }
     },
     openChapterTab(chapterId: string, title: string): void {
       const existing = this.chapterTabs.find((t) => t.chapterId === chapterId)

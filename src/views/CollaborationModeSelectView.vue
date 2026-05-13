@@ -1,5 +1,7 @@
 <script setup lang="ts">
-export type CollaborationMode = 'companion' | 'ghostwriter' | 'auto'
+import type { CollaborationMode } from '@/types/collaboration'
+
+export type { CollaborationMode }
 
 const props = defineProps<{
   active: CollaborationMode | null

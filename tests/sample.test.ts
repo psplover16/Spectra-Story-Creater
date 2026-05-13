@@ -12,7 +12,7 @@ describe('Vitest 與 @vue/test-utils 基礎可用性', () => {
     const wrapper = mount(App, {
       global: { plugins: [createPinia()] },
     })
-    // 初始狀態 workspaceRoot 為 null → 顯示 WorkspaceSelectView
-    expect(wrapper.text()).toContain('選擇 workspace 資料夾')
+    // 初始狀態 collaborationMode 為 null → 先顯示 CollaborationModeGate
+    expect(wrapper.text()).toContain('挑選協作模式')
   })
 })
