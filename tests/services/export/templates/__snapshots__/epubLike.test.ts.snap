@@ -1,0 +1,24 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`epubLike template > snapshot 對 fixture 章節穩定 1`] = `
+"<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8" />
+<title>鹿鼎記 — 揚州街頭</title>
+<style>
+  body { font-family: "PingFang TC", "Microsoft JhengHei", serif; line-height: 1.8; max-width: 720px; margin: 2rem auto; color: #1f2937; }
+  h1 { font-size: 1.5rem; }
+  p { text-indent: 2em; margin: 0.6em 0; }
+  hr { border: none; border-top: 1px dashed #d1d5db; }
+  @page { size: A4; margin: 2cm; }
+</style>
+</head>
+<body>
+<h1>揚州街頭</h1>
+<hr />
+<p>一段內文。</p>
+<p>第二段。</p>
+</body>
+</html>"
+`;

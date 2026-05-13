@@ -1,0 +1,1315 @@
+<!-- /claude --dangerously-skip-permissions -->
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spectra 速查筆記</title>
+<style>
+:root {
+  --bg: #fafaf7;
+  --bg-soft: #f0efe9;
+  --bg-code: #eeeee8;
+  --text: #2a2a2a;
+  --text-soft: #555;
+  --heading: #111;
+  --accent: #2563eb;
+  --accent-soft: #dbeafe;
+  --border: #e0e0d8;
+  --border-strong: #c8c8c0;
+  --tip-bg: #fef9c3;
+  --tip-border: #eab308;
+  --tip-text: #713f12;
+  --note-bg: #dbeafe;
+  --note-border: #2563eb;
+  --note-text: #1e3a8a;
+  --warn-bg: #fee2e2;
+  --warn-border: #dc2626;
+  --warn-text: #7f1d1d;
+  --shadow: 0 1px 3px rgba(0,0,0,0.05);
+  --sidebar-w: 290px;
+}
+[data-theme="dark"] {
+  --bg: #1a1b1e;
+  --bg-soft: #25262b;
+  --bg-code: #2c2e33;
+  --text: #d4d4d0;
+  --text-soft: #909096;
+  --heading: #ffffff;
+  --accent: #60a5fa;
+  --accent-soft: #1e3a8a;
+  --border: #2e2f35;
+  --border-strong: #3a3b42;
+  --tip-bg: #3a2f0a;
+  --tip-border: #facc15;
+  --tip-text: #fde68a;
+  --note-bg: #172554;
+  --note-border: #3b82f6;
+  --note-text: #bfdbfe;
+  --warn-bg: #450a0a;
+  --warn-border: #ef4444;
+  --warn-text: #fecaca;
+  --shadow: 0 1px 3px rgba(0,0,0,0.4);
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 24px; }
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC",
+               "Microsoft JhengHei", "Noto Sans TC", "Helvetica Neue", Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.75;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ===== Layout ===== */
+.app {
+  display: grid;
+  grid-template-columns: var(--sidebar-w) 1fr;
+  min-height: 100vh;
+}
+.sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  background: var(--bg-soft);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  padding: 20px 16px 32px;
+  font-size: 14px;
+}
+.content {
+  padding: 40px 56px 120px;
+  max-width: 920px;
+  width: 100%;
+}
+
+/* ===== Sidebar header ===== */
+.sidebar h1 {
+  font-size: 17px;
+  margin: 0 0 6px;
+  color: var(--heading);
+  letter-spacing: 0.3px;
+}
+.sidebar .subtitle {
+  font-size: 12px;
+  color: var(--text-soft);
+  margin: 0 0 14px;
+}
+.search-wrap {
+  position: relative;
+  margin-bottom: 14px;
+}
+.search {
+  width: 100%;
+  padding: 8px 30px 8px 30px;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13px;
+  outline: none;
+  transition: border 0.15s, box-shadow 0.15s;
+}
+.search:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.search-icon {
+  position: absolute; left: 9px; top: 50%; transform: translateY(-50%);
+  color: var(--text-soft); pointer-events: none; font-size: 14px;
+}
+.search-clear {
+  position: absolute; right: 4px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; color: var(--text-soft); cursor: pointer;
+  font-size: 16px; padding: 4px 8px; display: none;
+}
+.search-clear.active { display: block; }
+
+/* ===== TOC ===== */
+.toc { list-style: none; padding: 0; margin: 0; }
+.toc li { margin: 0; }
+.toc a {
+  display: block;
+  padding: 5px 10px;
+  color: var(--text);
+  text-decoration: none;
+  border-radius: 6px;
+  border-left: 3px solid transparent;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+.toc a:hover { background: var(--bg); color: var(--accent); }
+.toc a.active {
+  background: var(--bg);
+  color: var(--accent);
+  border-left-color: var(--accent);
+  font-weight: 600;
+}
+.toc > li > a { font-weight: 600; margin-top: 6px; }
+.toc ol { list-style: none; padding-left: 14px; margin: 2px 0 4px; }
+.toc ol a { font-size: 13px; padding: 3px 10px; color: var(--text-soft); }
+.toc ol a.active { color: var(--accent); }
+.toc li.hidden { display: none; }
+
+/* ===== Top bar (mobile + theme toggle) ===== */
+.topbar {
+  position: fixed;
+  top: 12px;
+  right: 16px;
+  display: flex;
+  gap: 8px;
+  z-index: 100;
+}
+.icon-btn {
+  width: 36px; height: 36px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--text);
+  font-size: 16px;
+  transition: background 0.15s, transform 0.1s;
+  box-shadow: var(--shadow);
+}
+.icon-btn:hover { background: var(--bg); }
+.icon-btn:active { transform: scale(0.95); }
+.menu-toggle { display: none; }
+
+/* ===== Content typography ===== */
+.content h1 {
+  font-size: 28px;
+  color: var(--heading);
+  margin: 0 0 8px;
+  font-weight: 700;
+}
+.content h2 {
+  font-size: 24px;
+  color: var(--heading);
+  margin: 56px 0 16px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--border-strong);
+  font-weight: 700;
+  scroll-margin-top: 24px;
+}
+.content h3 {
+  font-size: 19px;
+  color: var(--heading);
+  margin: 32px 0 12px;
+  font-weight: 600;
+  scroll-margin-top: 24px;
+}
+.content h4 {
+  font-size: 16px;
+  color: var(--heading);
+  margin: 20px 0 10px;
+  font-weight: 600;
+  scroll-margin-top: 24px;
+}
+.content p { margin: 12px 0; }
+.content a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+.content a:hover { border-bottom-color: var(--accent); }
+.content strong { color: var(--heading); font-weight: 700; }
+.content ul, .content ol { padding-left: 24px; margin: 10px 0; }
+.content li { margin: 4px 0; }
+.content hr { border: none; border-top: 1px solid var(--border); margin: 36px 0; }
+
+/* ===== Code ===== */
+.content code {
+  font-family: ui-monospace, "SFMono-Regular", "JetBrains Mono", "Fira Code",
+               Consolas, "Courier New", monospace;
+  font-size: 0.88em;
+}
+.content :not(pre) > code {
+  background: var(--bg-code);
+  color: var(--accent);
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  font-weight: 500;
+}
+.content pre {
+  background: var(--bg-code);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 16px;
+  overflow-x: auto;
+  margin: 14px 0;
+  font-size: 13.5px;
+  line-height: 1.6;
+  position: relative;
+}
+.content pre code {
+  background: none;
+  padding: 0;
+  border: none;
+  color: var(--text);
+  font-weight: normal;
+  white-space: pre;
+}
+.copy-btn {
+  position: absolute;
+  top: 8px; right: 8px;
+  padding: 4px 10px;
+  font-size: 12px;
+  background: var(--bg);
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  color: var(--text-soft);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s, color 0.15s;
+}
+.content pre:hover .copy-btn { opacity: 1; }
+.copy-btn:hover { color: var(--accent); }
+.copy-btn.copied { color: #16a34a; border-color: #16a34a; opacity: 1; }
+
+/* ===== Tables ===== */
+.content table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 14px 0;
+  font-size: 14.5px;
+  background: var(--bg);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+.content th, .content td {
+  padding: 10px 14px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+.content th {
+  background: var(--bg-soft);
+  color: var(--heading);
+  font-weight: 600;
+  font-size: 13.5px;
+}
+.content tr:last-child td { border-bottom: none; }
+.content tr:hover td { background: var(--bg-soft); }
+
+/* ===== Callouts ===== */
+.callout {
+  border-left: 4px solid;
+  padding: 12px 16px;
+  margin: 16px 0;
+  border-radius: 0 8px 8px 0;
+  font-size: 15px;
+}
+.callout p:first-child { margin-top: 0; }
+.callout p:last-child { margin-bottom: 0; }
+.callout-tip { background: var(--tip-bg); border-color: var(--tip-border); color: var(--tip-text); }
+.callout-tip strong { color: var(--tip-text); }
+.callout-note { background: var(--note-bg); border-color: var(--note-border); color: var(--note-text); }
+.callout-note strong { color: var(--note-text); }
+.callout-warn { background: var(--warn-bg); border-color: var(--warn-border); color: var(--warn-text); }
+.callout-warn strong { color: var(--warn-text); }
+
+/* ===== Section anchor link ===== */
+.anchor-link {
+  display: inline-block;
+  margin-left: 8px;
+  opacity: 0;
+  text-decoration: none;
+  font-size: 0.7em;
+  color: var(--text-soft);
+  transition: opacity 0.15s;
+}
+h2:hover .anchor-link, h3:hover .anchor-link, h4:hover .anchor-link { opacity: 1; }
+
+/* ===== Section hidden by search ===== */
+.content section.hidden, .content h2.hidden { display: none; }
+
+/* ===== Back to top ===== */
+.back-top {
+  position: fixed;
+  bottom: 24px; right: 24px;
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s, transform 0.15s;
+  z-index: 50;
+}
+.back-top.visible { opacity: 1; pointer-events: auto; }
+.back-top:hover { transform: translateY(-2px); }
+
+/* ===== Tag chips ===== */
+.tag {
+  display: inline-block;
+  padding: 1px 7px;
+  border-radius: 4px;
+  font-size: 11.5px;
+  font-weight: 600;
+  border: 1px solid var(--border-strong);
+  background: var(--bg);
+  color: var(--text-soft);
+  margin-right: 4px;
+  vertical-align: middle;
+}
+.tag-tip { background: var(--tip-bg); color: var(--tip-text); border-color: var(--tip-border); }
+.tag-warn { background: var(--warn-bg); color: var(--warn-text); border-color: var(--warn-border); }
+.tag-note { background: var(--note-bg); color: var(--note-text); border-color: var(--note-border); }
+
+/* ===== Mobile ===== */
+@media (max-width: 900px) {
+  .app { grid-template-columns: 1fr; }
+  .sidebar {
+    position: fixed;
+    top: 0; left: 0;
+    width: 290px;
+    z-index: 90;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+    box-shadow: 2px 0 12px rgba(0,0,0,0.15);
+  }
+  .sidebar.open { transform: translateX(0); }
+  .menu-toggle { display: inline-flex; }
+  .content { padding: 70px 20px 80px; }
+  .content h1 { font-size: 24px; }
+  .content h2 { font-size: 20px; }
+  .backdrop {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 80;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+  }
+  .backdrop.open { opacity: 1; pointer-events: auto; }
+}
+
+/* Print */
+@media print {
+  .sidebar, .topbar, .back-top, .copy-btn { display: none; }
+  .app { grid-template-columns: 1fr; }
+  .content { padding: 20px; max-width: 100%; }
+  .content pre { page-break-inside: avoid; }
+}
+
+/* Selection color */
+::selection { background: var(--accent-soft); color: var(--heading); }
+
+/* Scrollbars (subtle) */
+.sidebar::-webkit-scrollbar { width: 8px; }
+.sidebar::-webkit-scrollbar-track { background: transparent; }
+.sidebar::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 4px; }
+.sidebar::-webkit-scrollbar-thumb:hover { background: var(--text-soft); }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <button class="icon-btn theme-toggle" title="切換日夜模式" aria-label="Toggle theme">🌙</button>
+  <button class="icon-btn menu-toggle" title="目錄" aria-label="Toggle menu">☰</button>
+</div>
+
+<div class="backdrop"></div>
+
+<div class="app">
+
+<aside class="sidebar" id="sidebar">
+  <h1>📚 Spectra 速查筆記</h1>
+  <p class="subtitle">點擊側邊書籤跳轉，或用搜尋過濾</p>
+
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input type="search" class="search" placeholder="搜尋章節..." id="search">
+    <button class="search-clear" id="searchClear" title="清除">×</button>
+  </div>
+
+  <ol class="toc" id="toc">
+    <li>
+      <a href="#sec-1">一、開發流程</a>
+      <ol>
+        <li><a href="#sec-1-1">change 的三種狀態</a></li>
+      </ol>
+    </li>
+    <li>
+      <a href="#sec-2">二、四份產出文件</a>
+      <ol>
+        <li><a href="#sec-2-0">名詞釐清：proposal vs artifact</a></li>
+        <li><a href="#sec-2-1">文件位置</a></li>
+        <li><a href="#sec-2-1a">changes 與 specs 的關係</a></li>
+        <li><a href="#sec-2-2">四份文件總覽</a></li>
+        <li><a href="#sec-2-3">依賴關係</a></li>
+        <li><a href="#sec-2-4">每份文件的詳細用途</a></li>
+      </ol>
+    </li>
+    <li>
+      <a href="#sec-3">三、主要 Slash Commands</a>
+      <ol>
+        <li><a href="#sec-3-1">主流程</a></li>
+        <li><a href="#sec-3-2">輔助指令</a></li>
+      </ol>
+    </li>
+    <li>
+      <a href="#sec-4">四、Spectra CLI 指令</a>
+      <ol>
+        <li><a href="#sec-4-1">常用</a></li>
+        <li><a href="#sec-4-2">建立與歸檔</a></li>
+        <li><a href="#sec-4-3">Park 機制</a></li>
+        <li><a href="#sec-4-4">任務操作</a></li>
+        <li><a href="#sec-4-5">指示與分析</a></li>
+      </ol>
+    </li>
+    <li>
+      <a href="#sec-5">五、設定檔</a>
+      <ol>
+        <li><a href="#sec-5-1">.spectra.yaml 重點</a></li>
+        <li><a href="#sec-5-2">openspec/config.yaml 重點</a></li>
+      </ol>
+    </li>
+    <li>
+      <a href="#sec-6">六、典型一次完整流程</a>
+      <ol>
+        <li><a href="#sec-6-1">階段 1：準備期</a></li>
+        <li><a href="#sec-6-2">階段 2：規劃期</a></li>
+        <li><a href="#sec-6-3">階段 3：實作期</a></li>
+        <li><a href="#sec-6-a">六之一：apply 後再修改</a></li>
+        <li><a href="#sec-6-b">六之二：最小檢查清單</a></li>
+      </ol>
+    </li>
+    <li>
+      <a href="#sec-7">七、踩坑提醒</a>
+      <ol>
+        <li><a href="#sec-7-a">7-A. Repo 對齊</a></li>
+        <li><a href="#sec-7-b">7-B. 檔案位置</a></li>
+        <li><a href="#sec-7-c">7-C. 語言／語氣</a></li>
+        <li><a href="#sec-7-d">7-D. 編碼</a></li>
+        <li><a href="#sec-7-e">7-E. 設定相依</a></li>
+        <li><a href="#sec-7-f">7-F. 指令行為</a></li>
+      </ol>
+    </li>
+    <li>
+      <a href="#sec-8">八、TDD 模式</a>
+      <ol>
+        <li><a href="#sec-8-1">什麼是 TDD</a></li>
+        <li><a href="#sec-8-2">跟一般寫法的差別</a></li>
+        <li><a href="#sec-8-3">在 spectra 怎麼啟用</a></li>
+        <li><a href="#sec-8-4">啟用後 apply 會怎麼變</a></li>
+        <li><a href="#sec-8-5">跟你專案的關係</a></li>
+        <li><a href="#sec-8-6">跟其他開關的搭配</a></li>
+        <li><a href="#sec-8-7">何時不該開</a></li>
+        <li><a href="#sec-8-8">建議</a></li>
+      </ol>
+    </li>
+    <li>
+      <a href="#sec-9">九、Codex vs Claude Code 行為對照</a>
+      <ol>
+        <li><a href="#sec-9-1">主要差異對照表</a></li>
+        <li><a href="#sec-9-2">規則檔雙工具相容</a></li>
+        <li><a href="#sec-9-3">個人踩坑心得</a></li>
+        <li><a href="#sec-9-4">怎麼判斷現在用哪個工具</a></li>
+      </ol>
+    </li>
+  </ol>
+</aside>
+
+<main class="content">
+  <h1>Spectra 速查筆記</h1>
+
+  <div class="callout callout-note">
+    <p><strong>📚 本文件使用說明</strong></p>
+    <ul>
+      <li>一般段落 = AI 整理的速查資料（流程、指令、設定檔、模式說明）</li>
+      <li><span class="tag tag-tip">💡 心得</span> = 個人踩過的坑、Codex vs Claude Code 的差異觀察</li>
+      <li>快速查指令？ → <a href="#sec-3">三、主要 Slash Commands</a> 與 <a href="#sec-4">四、Spectra CLI 指令</a></li>
+    </ul>
+  </div>
+
+  <!-- ============ Section 1 ============ -->
+  <section>
+    <h2 id="sec-1">一、開發流程（標準路徑）<a class="anchor-link" href="#sec-1">#</a></h2>
+
+<pre><code>              ┌─────────────────────────────────────────────┐
+              │                                             │
+[想法]──→ /spectra-discuss ──→ /spectra-propose ──→ /spectra-apply ──→ /spectra-archive
+            (討論釐清)        (產出四份文件)        (依任務實作)        (歸檔)
+                                                       ↑
+                                                       │ 中斷後
+                                                       └─ /spectra-ingest（恢復上下文）</code></pre>
+
+    <ul>
+      <li><code>discuss</code> 可以省略：需求很清楚時，可直接進 <code>propose</code></li>
+      <li><code>apply</code> 跑到一半被打斷：下次回來先 <code>ingest</code>，再繼續 <code>apply</code></li>
+      <li><code>archive</code> 之後，change 會被移出 <code>openspec/changes/</code>，成為正式規格的一部分</li>
+      <li>白話講：<code>changes</code> 是「這次要改什麼」的變更單，<code>specs</code> 是「系統目前正式長什麼樣」的主規格</li>
+    </ul>
+
+    <h3 id="sec-1-1">change 的三種狀態<a class="anchor-link" href="#sec-1-1">#</a></h3>
+    <table>
+      <thead><tr><th>狀態</th><th>意思</th><th>適合的時機</th></tr></thead>
+      <tbody>
+        <tr><td><strong>parked</strong>（備忘）</td><td>文件寫好了，但還沒動工</td><td>propose 完、人工檢查中、暫時不想做</td></tr>
+        <tr><td><strong>active / in-progress</strong></td><td>正在實作</td><td>apply 期間</td></tr>
+        <tr><td><strong>archived</strong>（封存）</td><td>完成且歸檔</td><td>全部任務做完。proposal / design / spec / tasks 都已走完</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout callout-tip">
+      <p><strong>💡 個人心得：Codex vs Claude Code 在 park 行為上不一樣</strong></p>
+      <p>Codex 會混亂 — <code>/spectra-propose</code> 產出會跑到 <code>.git/</code> 裡，想看必須先 <code>unpark</code>。
+      而 <code>unpark</code> 在「正規 spectra」只是改 park 狀態旗標，<strong>Codex 卻會整個搬資料夾位置</strong>。</p>
+      <p>這是 Codex 整合的非正規行為，正規 spectra（Claude Code 整合）不會把檔案寫到 <code>.git/</code>。</p>
+    </div>
+  </section>
+
+  <!-- ============ Section 2 ============ -->
+  <section>
+    <h2 id="sec-2">二、四份產出文件（artifact）<a class="anchor-link" href="#sec-2">#</a></h2>
+
+    <h3 id="sec-2-0">0. 名詞先釐清：proposal vs artifact<a class="anchor-link" href="#sec-2-0">#</a></h3>
+    <p>很多人會把這兩個詞搞混，其實是不同層級</p>
+    <ul>
+      <li><strong>artifact（製品）</strong> = spectra 工作流中產出的「文件檔案」的<strong>總稱</strong>。<code>/spectra-propose</code> 一次會產出 <strong>4 個 artifact</strong>。</li>
+      <li><strong>proposal</strong> = 是其中<strong>一份特定的 artifact</strong>（檔名 <code>proposal.md</code>），是 4 份裡的「企劃書」。</li>
+    </ul>
+    <p>簡單說：<strong>proposal 是 artifact 的一種，artifact 是上位概念</strong>。一份 change 的 4 個 artifact = 1 個 proposal + 1 個 spec（每個 capability 各一份）+ 1 個 design + 1 個 tasks。</p>
+
+    <h3 id="sec-2-1">1. 文件位置<a class="anchor-link" href="#sec-2-1">#</a></h3>
+    <p><code>/spectra-propose</code> 會產出四份文件，但<strong>實際位置不要硬猜</strong>，要以 Spectra 回傳的 <code>changeDir</code> 為準。</p>
+    <ul>
+      <li>可用 <code>spectra status --change &lt;name&gt; --json</code></li>
+      <li>或 <code>spectra instructions apply --change &lt;name&gt; --json</code></li>
+      <li>直接看其中的 <code>changeDir</code></li>
+    </ul>
+    <p>常見情況：</p>
+    <ul>
+      <li>一般可見 change（Claude Code 正常情況）：<code>openspec/changes/&lt;change-name&gt;/</code></li>
+      <li>Codex 環境下、且被 <code>park</code> 的 change：<code>.git/spectra-app/changes/&lt;change-name&gt;/</code>（這是 Codex 整合的非正規行為，正規 spectra 不會把檔案寫到 <code>.git/</code>）</li>
+    </ul>
+
+    <h3 id="sec-2-1a">1-1. <code>changes</code> 與 <code>specs</code> 的關係<a class="anchor-link" href="#sec-2-1a">#</a></h3>
+    <p>這兩個最容易混淆，但角色其實不同：</p>
+    <ul>
+      <li><code>openspec/changes/&lt;change-name&gt;/</code> = <strong>這次 change 的工作區</strong></li>
+      <li><code>openspec/specs/&lt;capability&gt;/</code> = <strong>目前已接受、正在生效的正式規格</strong></li>
+    </ul>
+
+    <p>可以直接這樣理解：</p>
+    <ul>
+      <li><code>changes</code> 在回答：<strong>這次想改什麼</strong></li>
+      <li><code>specs</code> 在回答：<strong>系統現在正式應該怎麼運作</strong></li>
+    </ul>
+
+    <p><code>changes</code> 裡也會看到 <code>specs/&lt;capability&gt;/spec.md</code>，但那份是<strong>這次 change 的 delta spec</strong>，不是主規格本體。它描述的是「這次變更想新增 / 修改哪些規格」。</p>
+
+    <p>真正長期存在的正式規格在：</p>
+    <ul>
+      <li><code>openspec/specs/&lt;capability&gt;/spec.md</code></li>
+    </ul>
+
+    <p>流程上通常是：</p>
+    <ol>
+      <li>在 <code>openspec/changes/&lt;change-name&gt;/</code> 裡先產出 proposal / design / tasks / delta spec</li>
+      <li><code>apply</code> 完成後驗證</li>
+      <li><code>archive</code> 時，把這次 change 的 spec 內容同步進 <code>openspec/specs/&lt;capability&gt;/spec.md</code></li>
+      <li>之後 <code>changes</code> 是歷史變更單，<code>specs</code> 則成為新的正式基準</li>
+    </ol>
+
+    <div class="callout callout-note">
+      <p><strong>用 Git 比喻：</strong></p>
+      <ul>
+        <li><code>changes</code> 很像 <strong>PR / 變更提案</strong></li>
+        <li><code>specs</code> 很像 <strong>merge 後主分支上的正式內容</strong></li>
+      </ul>
+    </div>
+
+    <h3 id="sec-2-2">2. 四份文件總覽<a class="anchor-link" href="#sec-2-2">#</a></h3>
+    <table>
+      <thead><tr><th>順序</th><th>檔名</th><th>角色類比</th><th>回答什麼</th><th>語言</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td><code>proposal.md</code></td><td>企劃書</td><td>為什麼要做？要改什麼？影響哪些檔案？</td><td>跟 <code>.spectra.yaml</code> 的 <code>locale</code></td></tr>
+        <tr><td>2</td><td><code>specs/&lt;capability&gt;/spec.md</code></td><td>驗收標準</td><td>做完後使用者應該看到哪些「行為」？</td><td><strong>必須英文</strong>，用 SHALL/MUST</td></tr>
+        <tr><td>3</td><td><code>design.md</code></td><td>技術設計文件</td><td>技術上怎麼做？主要設計決策是什麼？</td><td>跟 <code>locale</code></td></tr>
+        <tr><td>4</td><td><code>tasks.md</code></td><td>施工清單</td><td>要拆成哪些實作步驟？</td><td>跟 <code>locale</code></td></tr>
+      </tbody>
+    </table>
+
+    <h3 id="sec-2-3">3. 四份文件的依賴關係<a class="anchor-link" href="#sec-2-3">#</a></h3>
+<pre><code>proposal.md  ─┬─→ specs/&lt;capability&gt;/spec.md     (依 proposal 的 Capabilities 一個一個產)
+              │
+              └─→ design.md  ──→  tasks.md       (tasks 依 design 拆步驟)</code></pre>
+    <p>後面的 artifact 會讀前面的當輸入，所以 propose 過程是<strong>有順序的</strong>，不是同時生成。</p>
+
+    <h3 id="sec-2-4">4. 每份文件的詳細用途<a class="anchor-link" href="#sec-2-4">#</a></h3>
+
+    <h4 id="sec-2-4-1">4-1. <code>proposal.md</code> — 企劃書（為什麼 + 要改什麼）</h4>
+    <p>整個 change 的「總綱」，是其他三份文件的根據。</p>
+    <p>依 change 類型有不同模板：</p>
+    <ul>
+      <li><strong>Feature</strong>（新功能）：<code>Why</code> / <code>What Changes</code> / <code>Non-Goals</code> / <code>Capabilities</code>（New/Modified）/ <code>Impact</code></li>
+      <li><strong>Bug Fix</strong>（修 bug）：<code>Problem</code> / <code>Root Cause</code> / <code>Proposed Solution</code> / <code>Success Criteria</code> / <code>Impact</code></li>
+      <li><strong>Refactor</strong>（重構）：<code>Summary</code> / <code>Motivation</code> / <code>Proposed Solution</code> / <code>Alternatives Considered</code> / <code>Impact</code></li>
+    </ul>
+    <p><strong>最重要的章節是 <code>Impact</code></strong></p>
+    <ul>
+      <li><code>Modified</code>：只能填磁碟上<strong>真的存在</strong>的檔案</li>
+      <li><code>New</code>：填要新增的檔案</li>
+      <li><code>Removed</code>：要刪除的檔案</li>
+    </ul>
+    <p>apply 階段會用 <code>Impact</code> 做 preflight 檢查，亂填會被擋下來。</p>
+
+    <h4 id="sec-2-4-2">4-2. <code>specs/&lt;capability&gt;/spec.md</code> — 驗收標準</h4>
+    <ul>
+      <li><strong>每個 capability（能力）一份 spec</strong>，所以可能不只一份</li>
+      <li>描述「行為」而不是「實作」</li>
+      <li>寫 <strong>Given / When / Then</strong> 的 scenarios，要可驗證</li>
+      <li><strong>必須用英文</strong>寫，動詞用 SHALL / MUST 這種規範語氣（不是建議，是規範）</li>
+      <li>archive 之後，這份 spec 會被合併進主規格 <code>openspec/specs/&lt;capability&gt;/spec.md</code>，成為長期保存的正式規格</li>
+    </ul>
+
+    <h4 id="sec-2-4-3">4-3. <code>design.md</code> — 技術設計</h4>
+    <p>proposal 講「做什麼」，design 講「技術上怎麼做」。通常包含</p>
+    <ul>
+      <li>架構選擇（為什麼用 X 而不是 Y）</li>
+      <li>資料模型 / store 結構</li>
+      <li>元件 / 模組劃分</li>
+      <li>與現有程式碼的整合方式</li>
+      <li><code>Alternatives Considered</code>（其他方案為什麼不採用）</li>
+    </ul>
+    <p>寫給「未來的實作者」（包括下一個接手的 AI agent）看的，避免他們反推設計意圖。</p>
+
+    <h4 id="sec-2-4-4">4-4. <code>tasks.md</code> — 施工清單</h4>
+    <p>把 design 拆成可一步步執行的具體任務。</p>
+    <ul>
+      <li>格式：<code>- [ ] 任務描述</code>（待辦） / <code>- [x]</code>（完成）</li>
+      <li>可選 <code>[P]</code> 標記（例：<code>- [ ] [P] 任務</code>）代表可以平行做
+        <ul><li><strong>只有當 <code>.spectra.yaml</code> 設了 <code>parallel_tasks: true</code> 才會生效</strong></li></ul>
+      </li>
+      <li><code>/spectra-apply</code> 會一項一項執行勾選</li>
+      <li>健康的 tasks.md 標準：
+        <ul>
+          <li>每個任務 1 小時內可做完</li>
+          <li>全部任務不超過 15 條</li>
+          <li>不跨超過 3 個不相關子系統</li>
+          <li>超過就應該拆成多個 change</li>
+        </ul>
+      </li>
+    </ul>
+  </section>
+
+  <!-- ============ Section 3 ============ -->
+  <section>
+    <h2 id="sec-3">三、主要 Slash Commands<a class="anchor-link" href="#sec-3">#</a></h2>
+    <p>在 Claude Code 裡輸入</p>
+
+    <h3 id="sec-3-1">主流程<a class="anchor-link" href="#sec-3-1">#</a></h3>
+    <table>
+      <thead><tr><th>指令</th><th>用途</th><th>接收的參數</th><th>範例</th></tr></thead>
+      <tbody>
+        <tr><td><code>/spectra-discuss</code></td><td>收斂需求、規則、範圍與 change 名，不寫程式</td><td>主題 / change 名 / 想法</td><td><code>/spectra-discuss 我想做錯題本功能</code></td></tr>
+        <tr><td><code>/spectra-propose</code></td><td>產出 proposal / spec / design / tasks 四份文件</td><td>需求描述或 change 方向</td><td><code>/spectra-propose 加上錯題本功能</code></td></tr>
+        <tr><td><code>/spectra-apply</code></td><td>依 <code>tasks.md</code> 一項一項實作</td><td>可選：change 名</td><td><code>/spectra-apply add-mistake-book</code></td></tr>
+        <tr><td><code>/spectra-archive</code></td><td>把完成的 change 歸檔</td><td>可選：change 名</td><td><code>/spectra-archive add-mistake-book</code></td></tr>
+      </tbody>
+    </table>
+
+    <h3 id="sec-3-2">輔助指令<a class="anchor-link" href="#sec-3-2">#</a></h3>
+    <table>
+      <thead><tr><th>指令</th><th>用途</th><th>接收的參數</th><th>範例</th></tr></thead>
+      <tbody>
+        <tr><td><code>/spectra-ask</code></td><td>只根據 <code>openspec/</code> 回答規格問題</td><td>問題</td><td><code>/spectra-ask 錯題本怎麼計分？</code></td></tr>
+        <tr><td><code>/spectra-ingest</code></td><td>中斷後補回上下文，或把新需求併入現有 change</td><td>可選：change 名</td><td><code>/spectra-ingest add-mistake-book</code></td></tr>
+        <tr><td><code>/spectra-debug</code></td><td>系統化除錯</td><td>bug 描述</td><td><code>/spectra-debug 暗色模式切換後卡片背景沒變</code></td></tr>
+        <tr><td><code>/spectra-commit</code></td><td>只提交屬於某個 change 的檔案</td><td>可選：change 名</td><td><code>/spectra-commit add-mistake-book</code></td></tr>
+        <tr><td><code>/spectra-audit</code></td><td>做安全性與危險預設值審查</td><td>無</td><td><code>/spectra-audit</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ============ Section 4 ============ -->
+  <section>
+    <h2 id="sec-4">四、Spectra CLI 指令<a class="anchor-link" href="#sec-4">#</a></h2>
+    <p>在 terminal 執行</p>
+
+    <h3 id="sec-4-1">常用<a class="anchor-link" href="#sec-4-1">#</a></h3>
+<pre><code>spectra list
+spectra list --parked
+spectra show &lt;name&gt;
+spectra status --change &lt;name&gt;
+spectra status --change &lt;name&gt; --json
+spectra validate
+spectra search "&lt;關鍵字&gt;"</code></pre>
+
+    <h3 id="sec-4-2">建立與歸檔<a class="anchor-link" href="#sec-4-2">#</a></h3>
+<pre><code>spectra new change &lt;name&gt;
+spectra new change &lt;name&gt; --agent codex
+spectra archive &lt;name&gt;</code></pre>
+
+    <h3 id="sec-4-3">Park（暫存）機制<a class="anchor-link" href="#sec-4-3">#</a></h3>
+<pre><code>spectra park &lt;name&gt;
+spectra unpark &lt;name&gt;
+spectra list --parked</code></pre>
+
+    <h3 id="sec-4-4">任務操作<a class="anchor-link" href="#sec-4-4">#</a></h3>
+<pre><code>spectra task list --change &lt;name&gt;
+spectra task done --change &lt;name&gt; &lt;task-id&gt;</code></pre>
+
+    <h3 id="sec-4-5">指示與分析<a class="anchor-link" href="#sec-4-5">#</a></h3>
+<pre><code>spectra instructions proposal --change &lt;name&gt; --json
+spectra instructions design --change &lt;name&gt; --json
+spectra instructions specs --change &lt;name&gt; --json
+spectra instructions tasks --change &lt;name&gt; --json
+spectra instructions apply --change &lt;name&gt; --json
+spectra analyze &lt;name&gt; --json</code></pre>
+  </section>
+
+  <!-- ============ Section 5 ============ -->
+  <section>
+    <h2 id="sec-5">五、設定檔<a class="anchor-link" href="#sec-5">#</a></h2>
+
+    <table>
+      <thead><tr><th>檔案</th><th>用途</th></tr></thead>
+      <tbody>
+        <tr><td><code>.spectra.yaml</code></td><td>Spectra App / workflow 設定，例如 locale、parallel_tasks</td></tr>
+        <tr><td><code>openspec/config.yaml</code></td><td>OpenSpec 專案背景與 artifact 規則</td></tr>
+        <tr><td><code>AGENTS.md</code></td><td>給 AI agent 的工作指引</td></tr>
+        <tr><td><code>.agents/skills/spectra-*/SKILL.md</code></td><td>各 Slash Command 的執行邏輯</td></tr>
+      </tbody>
+    </table>
+
+    <h3 id="sec-5-1"><code>.spectra.yaml</code> 重點<a class="anchor-link" href="#sec-5-1">#</a></h3>
+    <p>這是整個 spectra 工作流的<strong>總開關</strong>，控制 AI 產出 artifact 的語言、apply 階段的行為、worktree、TDD 等。<strong>所有可用欄位</strong></p>
+
+<pre><code># 規格資料夾位置（OpenSpec 主資料夾）
+# 預設：openspec
+# 改路徑要重建向量索引（rebuild vector search index）
+spec_dir: docs/specs
+
+# AI 產出 artifact 的語言
+# 你目前用：tw（繁體中文）
+# 例外：specs/*/spec.md 永遠英文（規範文件需要 SHALL/MUST）
+locale: tw
+
+# === Workflow toggles（功能開關）===
+
+# TDD 模式：apply 時先寫測試再寫實作（Red → Green → Refactor）
+tdd: true
+
+# Audit 模式：apply 完自動跑安全/危險預設值審查
+audit: true
+
+# 平行任務：tasks.md 裡 [P] 標記才會真的平行執行
+parallel_tasks: true
+
+# 額外產生 /spectra:X 形式的 slash command（除了 /spectra-X）
+claude_slash_commands: true
+
+# === Git Worktree（隔離分支）===
+
+# 為每個 change 開獨立 git worktree，避免互相干擾
+worktree: true
+
+# worktree 自訂位置（預設 .spectra/worktrees）
+worktrees_dir: .spectra/worktrees
+
+# === Claude Code skill 強度 ===
+
+# low / medium / high / xhigh / max
+# 越高 → 思考越久、品質越好、token 越貴
+claude_effort:
+  apply: high
+
+# === 對哪些 AI 工具產生指令檔 ===
+
+tools:
+  - claude
+  - cursor</code></pre>
+
+    <p><strong>你目前實際的設定</strong>（<a href=".spectra.yaml">.spectra.yaml</a>）只有開了 <code>locale: tw</code>，其他都還是註解狀態。</p>
+
+    <table>
+      <thead><tr><th>欄位</th><th>你目前狀態</th><th>建議</th></tr></thead>
+      <tbody>
+        <tr><td><code>locale: tw</code></td><td>✓ 已開</td><td>保持（中文 artifact 用）</td></tr>
+        <tr><td><code>tdd: true</code></td><td>✗ 註解中</td><td>想用 TDD 流程才開（見 <a href="#sec-8">第八節</a>）</td></tr>
+        <tr><td><code>audit: true</code></td><td>✗ 註解中</td><td>想要每次 apply 完自動安全審查才開</td></tr>
+        <tr><td><code>parallel_tasks: true</code></td><td>✗ 註解中</td><td>想讓 tasks 的 <code>[P]</code> 標記真的平行才開</td></tr>
+        <tr><td><code>worktree: true</code></td><td>✗ 註解中</td><td>你目前 git 是壞的（<code>.git</code> 結構錯），先把 git 修好再說</td></tr>
+        <tr><td><code>claude_effort: apply: high</code></td><td>✗ 註解中</td><td>apply 階段如果常常拆得不好可以開 high 試試</td></tr>
+      </tbody>
+    </table>
+
+    <p><strong>改 <code>.spectra.yaml</code> 後要不要重啟？</strong></p>
+    <ul>
+      <li>改 <code>spec_dir</code> → 要重建向量索引（檔案開頭就有警告）</li>
+      <li>改其他開關 → 下次跑 slash command 時會直接生效，不用重啟</li>
+    </ul>
+
+    <h3 id="sec-5-2"><code>openspec/config.yaml</code> 重點<a class="anchor-link" href="#sec-5-2">#</a></h3>
+<pre><code>schema: spec-driven
+
+context: |
+  專案類型：日語學習網站
+  技術棧：Vue 3 + TypeScript + ...
+
+rules:
+  proposal:
+    - &lt;規則 1&gt;
+  specs:
+    - &lt;規則 1&gt;
+  design:
+    - &lt;規則 1&gt;
+  tasks:
+    - &lt;規則 1&gt;</code></pre>
+
+    <p>注意：</p>
+    <ul>
+      <li><code>rules</code> 只有 <code>proposal</code> / <code>specs</code> / <code>design</code> / <code>tasks</code> 四個鍵會被讀</li>
+      <li>寫其他頂層鍵不會生效</li>
+    </ul>
+  </section>
+
+  <!-- ============ Section 6 ============ -->
+  <section>
+    <h2 id="sec-6">六、典型一次完整流程<a class="anchor-link" href="#sec-6">#</a></h2>
+    <p>整個流程分三個階段：<strong>準備 → 規劃 → 實作</strong>。讀的時候只看你目前在的階段就好。</p>
+
+<pre><code>[準備期]                  [規劃期]                       [實作期]
+                                                         ┌──→ 中斷恢復 ─┐
+repo preflight ──→ scaffold ──→ discuss ──→ propose ──→ apply  ←───────┤
+                                  │           │                         │
+                                 (可選)    (人工檢查)                ──→ archive</code></pre>
+
+    <h3 id="sec-6-1">階段 1：準備期（確認骨架）<a class="anchor-link" href="#sec-6-1">#</a></h3>
+    <div class="callout callout-note">
+      <p>目的：避免到了 <code>/spectra-apply</code> 才發現整個 app 骨架不存在。</p>
+    </div>
+
+<pre><code># 0. repo preflight：看 repo 是哪一種狀況
+rg --files -g "package.json" -g "src/**" -g "vite.config.*" -g "vitest.config.*" -g "tsconfig*.json"
+
+#    A. 已有完整骨架        → 可直接 discuss 功能、在既有架構上 propose
+#    B. 只有部分骨架        → propose 時把缺的骨架一起寫進 change
+#    C. 幾乎只有文件 / 空 repo → 先單獨開一個 scaffold change
+
+# 0-2. 如果是 B 或 C，先建前端骨架（一個獨立 change）
+/spectra-discuss 我要先建立 Vue 3 + TypeScript + Vite 的前端 app 骨架
+/spectra-propose 建立 Vue 3 + TypeScript + Vite 前端骨架，包含 router、基本頁面結構、測試設定
+/spectra-apply add-web-app-scaffold</code></pre>
+
+    <h3 id="sec-6-2">階段 2：規劃期（討論 → 產出 4 份文件 → 人工檢查）<a class="anchor-link" href="#sec-6-2">#</a></h3>
+    <div class="callout callout-warn">
+      <p>這階段是<strong>最重要的防呆關卡</strong>，artifact 寫錯會在 apply 階段一次爆給你看。</p>
+    </div>
+
+<pre><code># 1. 需求還不夠清楚時，先 discuss
+/spectra-discuss 我想做一個錯題本功能
+# 或讀指定檔案
+/spectra-discuss 請讀取指定 Markdown 檔案 `@/_private/discuss.txt` 的內容，並以它作為唯一輸入。最終把結果放入 @/_private/propose.md
+
+# 2. propose 前先對齊需求和 repo 現況（防呆）
+#    - proposal.md 的 Impact -> Modified：只能寫真的存在的檔案
+#    - proposal.md 的 Impact -> New：寫即將新增的檔案
+#    - 沒 package.json、src/、router、App.vue → 不能當「既有 app」
+#    - 缺骨架時要先決定：
+#      (1) 先開一個 scaffold change
+#      (2) 還是把 scaffold 納入同一個 change
+
+# 3. 產出四份文件
+/spectra-propose 加上錯題本：答錯的題目自動加入錯題本，使用者可以重做
+# 或讀指定檔案
+/spectra-propose 請讀取指定 Markdown 檔案 `@/_private/propose.md` 的內容，並以它作為唯一輸入。
+# → 產出 `&lt;changeDir&gt;/{proposal,design,tasks,specs/...}.md`
+
+# 4. 人工檢查 4 份文件
+#    - proposal.md 的 Impact -> Modified 檔案真的存在嗎？
+#    - proposal.md 的 Impact -> New 合理嗎？
+#    - design.md 建立在真實 repo 結構上嗎？
+#    - tasks.md 是否假設了不存在的 router、page、store、test setup？
+#    - spec.md 的能力名稱和 proposal 對得上嗎？
+#
+#    💡 propose 預設會自動 park，所以 `spectra list` 看不到 change
+#       要看用 `spectra list --parked`
+#       要打開資料夾來檢查文件可以先 unpark：
+spectra unpark &lt;name&gt;
+spectra unpark add-down-stairs-game</code></pre>
+
+    <h3 id="sec-6-3">階段 3：實作期（apply → 中斷恢復 → archive）<a class="anchor-link" href="#sec-6-3">#</a></h3>
+<pre><code># 5. 開始實作
+/spectra-apply add-down-stairs-game
+# → 如果 apply preflight 跳出 missing files：
+#    - 先判斷是 proposal / design / tasks 寫錯，還是真的缺 app scaffold
+#    - 不要硬做，回頭修 artifacts 或調整 change scope
+
+# 6. 中途被打斷 / 隔天回來
+/spectra-ingest add-down-stairs-game     # 補回上下文
+/spectra-apply add-down-stairs-game       # 繼續實作
+
+# 7. 全部完成後歸檔
+/spectra-archive add-down-stairs-game</code></pre>
+
+    <h3 id="sec-6-a">六之一、<code>/spectra-apply</code> 之後要再修改怎麼辦？<a class="anchor-link" href="#sec-6-a">#</a></h3>
+    <p>兩個選擇</p>
+
+    <p><strong>選擇 A：在原本的 change 上補修改（推薦小改）</strong></p>
+<pre><code># 用新的 discuss 補需求
+/spectra-discuss 請讀取指定 Markdown 檔案 `@/need/discuss2.md` 的內容，並以它作為唯一輸入。
+
+# 把新需求併進現有 change 的 tasks
+/spectra-ingest add-down-stairs-game
+
+# 繼續 apply 新增的 task
+/spectra-apply add-down-stairs-game</code></pre>
+
+    <p><strong>選擇 B：另開一個新 change（推薦大改 / 不同 capability）</strong></p>
+<pre><code>/spectra-discuss &lt;新需求&gt;
+/spectra-propose &lt;新需求&gt;
+/spectra-apply &lt;new-change-name&gt;</code></pre>
+
+    <p>判斷標準：</p>
+    <ul>
+      <li>跟原 change <strong>同一個 capability</strong> 的小調整 → A</li>
+      <li><strong>新 capability</strong> / 跨多檔案的大改 → B（避免單一 change 失控）</li>
+    </ul>
+
+    <h3 id="sec-6-b">六之二、避免下次再犯同類錯誤的最小檢查清單<a class="anchor-link" href="#sec-6-b">#</a></h3>
+    <ul>
+      <li>在 <code>/spectra-propose</code> 前，先確認 repo 是既有 app、半成品 app，還是幾乎空 repo</li>
+      <li><code>Impact -&gt; Modified</code> 只能填目前磁碟上真的存在的檔案</li>
+      <li><code>Impact -&gt; New</code> 才能填目前不存在、準備新增的檔案</li>
+      <li>不要把 <code>context</code> 裡的技術背景誤當成 repo 已經存在的骨架</li>
+      <li><code>discuss</code> 負責收斂需求，<code>propose</code> 必須對齊 repo 現況，<code>apply</code> 不應該才第一次發現骨架不存在</li>
+      <li>apply preflight 一旦出現 <code>missing files</code>，先修 artifacts 或 scope，不要把錯的假設直接帶進實作</li>
+    </ul>
+  </section>
+
+  <!-- ============ Section 7 ============ -->
+  <section>
+    <h2 id="sec-7">七、踩坑提醒<a class="anchor-link" href="#sec-7">#</a></h2>
+    <p>依主題分組，<strong>遇到哪一類問題就看哪一段</strong>。</p>
+
+    <h3 id="sec-7-a">7-A. Repo 現況對齊（最常踩）<a class="anchor-link" href="#sec-7-a">#</a></h3>
+    <ul>
+      <li>不要把 <code>proposal</code> 的技術背景<strong>直接等同於</strong> repo 目前現況</li>
+      <li><code>Modified</code> 路徑必須先確認<strong>真的存在</strong>，不能靠猜</li>
+      <li>propose 前先用 <code>rg --files -g "package.json" -g "src/**" ...</code> 確認 repo 是 A/B/C 哪一種</li>
+    </ul>
+
+    <h3 id="sec-7-b">7-B. 檔案位置（不要硬猜路徑）<a class="anchor-link" href="#sec-7-b">#</a></h3>
+    <ul>
+      <li>不要預設 <code>/spectra-propose</code> 產物一定在 <code>openspec/changes/</code>，先看 Spectra 回傳的 <code>changeDir</code></li>
+      <li>拿 <code>changeDir</code> 的方法：<code>spectra status --change &lt;name&gt; --json</code> 或 <code>spectra instructions apply --change &lt;name&gt; --json</code></li>
+      <li>在 Codex 環境，parked change 可能跑去 <code>.git/spectra-app/changes/&lt;change-name&gt;/</code>（詳見 <a href="#sec-9">九、Codex vs Claude Code 行為對照</a>）</li>
+    </ul>
+
+    <h3 id="sec-7-c">7-C. 語言／語氣（artifact 的語言不一致）<a class="anchor-link" href="#sec-7-c">#</a></h3>
+    <ul>
+      <li><code>specs/*/spec.md</code> <strong>必須英文</strong>，動詞用 <strong>SHALL / MUST</strong>（規範語氣，不是建議）</li>
+      <li><code>proposal.md</code> / <code>design.md</code> / <code>tasks.md</code> 會跟 <code>.spectra.yaml</code> 的 <code>locale</code> 走</li>
+    </ul>
+
+    <h3 id="sec-7-d">7-D. 編碼（中文 artifact 容易出包）<a class="anchor-link" href="#sec-7-d">#</a></h3>
+    <ul>
+      <li>中文 artifact 要確保 <strong>UTF-8</strong> 編碼</li>
+      <li>避免 PowerShell 或 CLI 管線把中文寫成「問號字元」</li>
+      <li>避免 BOM 汙染可見文字（<a href="AGENTS.md">AGENTS.md</a> 也有提到）</li>
+    </ul>
+
+    <h3 id="sec-7-e">7-E. 設定相依（開關沒打開 → 功能不會生效）<a class="anchor-link" href="#sec-7-e">#</a></h3>
+    <ul>
+      <li><code>tasks.md</code> 裡的 <code>[P]</code> 標記只有在 <code>.spectra.yaml</code> 開 <code>parallel_tasks: true</code> 才會真的平行</li>
+      <li>TDD 流程只有在 <code>tdd: true</code> 才會啟用（見 <a href="#sec-8">八、TDD 模式</a>）</li>
+    </ul>
+
+    <h3 id="sec-7-f">7-F. 指令行為（容易誤解的地方）<a class="anchor-link" href="#sec-7-f">#</a></h3>
+    <ul>
+      <li><code>/spectra-ask</code> 的答案<strong>只能來自 <code>openspec/</code></strong>，不是一般知識問答（不是 ChatGPT）</li>
+      <li><code>/spectra-propose</code> 產出後<strong>自動 park</strong>，是設計、不是 bug — <code>spectra list</code> 看不到，要 <code>spectra list --parked</code></li>
+    </ul>
+  </section>
+
+  <!-- ============ Section 8 ============ -->
+  <section>
+    <h2 id="sec-8">八、TDD 模式<a class="anchor-link" href="#sec-8">#</a></h2>
+
+    <h3 id="sec-8-1">1. 什麼是 TDD<a class="anchor-link" href="#sec-8-1">#</a></h3>
+    <p><strong>TDD = Test-Driven Development（測試驅動開發）</strong></p>
+    <p>紀律：<strong>先寫測試，再寫實作</strong>。寫程式的順序倒過來。</p>
+<pre><code>1. Red（紅）   ─→ 先寫一個失敗的測試（功能還沒做，所以紅）
+2. Green（綠） ─→ 寫最少的程式碼讓測試通過（變綠）
+3. Refactor   ─→ 在測試保護下重構，保持綠燈
+                 ↓
+              （回到 1，下一個小功能）</code></pre>
+
+    <h3 id="sec-8-2">2. 跟一般寫法的差別<a class="anchor-link" href="#sec-8-2">#</a></h3>
+    <table>
+      <thead><tr><th></th><th>一般寫法</th><th>TDD</th></tr></thead>
+      <tbody>
+        <tr><td>順序</td><td>寫程式 → 寫測試（常忘）</td><td>寫測試 → 寫程式</td></tr>
+        <tr><td>測試覆蓋率</td><td>容易漏</td><td>自然就高</td></tr>
+        <tr><td>程式設計品質</td><td>容易寫成難測試的形狀</td><td>被迫寫成可測試（鬆耦合、純函式）</td></tr>
+        <tr><td>改 code 心理</td><td>怕壞掉</td><td>有測試擋著、敢改</td></tr>
+      </tbody>
+    </table>
+
+    <h3 id="sec-8-3">3. 在 spectra 怎麼啟用<a class="anchor-link" href="#sec-8-3">#</a></h3>
+    <p>打開 <a href=".spectra.yaml">.spectra.yaml</a> 的這行（拿掉 <code>#</code>）</p>
+<pre><code>tdd: true</code></pre>
+    <p>不用重啟，下次跑 <code>/spectra-apply</code> 就會走 TDD 流程。</p>
+
+    <h3 id="sec-8-4">4. 啟用後 <code>/spectra-apply</code> 會怎麼變<a class="anchor-link" href="#sec-8-4">#</a></h3>
+    <p><strong>沒開 TDD（預設）</strong>：</p>
+<pre><code>讀 tasks.md → 直接寫實作 → 跑測試（如果 tasks 有要求）→ 勾選任務</code></pre>
+    <p><strong>開了 TDD</strong>：</p>
+<pre><code>讀 tasks.md → 先寫一個失敗的測試 → 跑測試（紅）
+            → 寫最少實作讓測試通過（綠）
+            → Refactor（保持綠）
+            → 勾選任務</code></pre>
+    <p>每一條 task 都會走一次 Red→Green→Refactor 的小循環。</p>
+
+    <h3 id="sec-8-5">5. 跟你專案的關係（Vue 3 + Vitest）<a class="anchor-link" href="#sec-8-5">#</a></h3>
+    <p>你專案已經裝好 <a href="vitest.config.ts">vitest.config.ts</a>，TDD 模式跑出來的測試會直接放進 vitest。</p>
+
+    <p><strong>適合 TDD 的部分</strong></p>
+    <ul>
+      <li>純邏輯（題目評分、錯題本累積、卡片狀態機、計時器邏輯）</li>
+      <li>composable / store（pinia store 的 mutation/getter）</li>
+      <li>utility 函式</li>
+      <li>修 bug（先寫一個會重現 bug 的測試）</li>
+    </ul>
+
+    <p><strong>不太適合 TDD 的部分</strong></p>
+    <ul>
+      <li>UI 視覺 / CSS 動畫（很難用斷言描述「看起來對」）</li>
+      <li>第一次探索的 prototype（連需求都還沒定，沒法寫測試）</li>
+      <li>純串接外部 API 的薄層（如果只是 fetch 包一下，測試價值低）</li>
+    </ul>
+
+    <h3 id="sec-8-6">6. 跟 <code>.spectra.yaml</code> 其他開關的搭配<a class="anchor-link" href="#sec-8-6">#</a></h3>
+    <table>
+      <thead><tr><th>同時開</th><th>效果</th></tr></thead>
+      <tbody>
+        <tr><td><code>tdd: true</code> + <code>audit: true</code></td><td>apply 走 TDD + 完成後跑安全審查（最嚴格）</td></tr>
+        <tr><td><code>tdd: true</code> + <code>parallel_tasks: true</code></td><td>平行 task 各自走自己的 Red→Green→Refactor（有可能互相干擾，要小心）</td></tr>
+        <tr><td><code>tdd: true</code> + <code>claude_effort.apply: high</code></td><td>apply 思考更久但會把 TDD 紀律走得更完整</td></tr>
+      </tbody>
+    </table>
+
+    <h3 id="sec-8-7">7. 何時不該開<a class="anchor-link" href="#sec-8-7">#</a></h3>
+    <ul>
+      <li><strong>趕時間做 demo / spike</strong>：TDD 慢，原型期不適合</li>
+      <li><strong>純樣式調整</strong>：寫不出有意義的測試</li>
+      <li><strong>既有 code 沒測試基礎，第一次大改</strong>：先補上測試骨架（一次性），再開 TDD 做後續</li>
+    </ul>
+
+    <h3 id="sec-8-8">8. 建議<a class="anchor-link" href="#sec-8-8">#</a></h3>
+    <p>你這個錯題本 / 練習網站專案，<strong>邏輯比例高</strong>（評分、累積、狀態），開 TDD 收益不錯。建議的試法</p>
+    <ol>
+      <li>先在筆記裡記住「打開 <code>tdd: true</code>」這個動作</li>
+      <li>下次有純邏輯的 change（例如「自動加入錯題本」），把 <code>tdd: true</code> 打開試一個 change</li>
+      <li>對比有開 vs 沒開的 task 拆解、測試覆蓋率，自己判斷要不要常駐打開</li>
+      <li>純樣式 change 之前，把它關回去（避免被迫寫很彆扭的視覺測試）</li>
+    </ol>
+  </section>
+
+  <!-- ============ Section 9 ============ -->
+  <section>
+    <h2 id="sec-9">九、Codex vs Claude Code 行為對照<a class="anchor-link" href="#sec-9">#</a></h2>
+    <p>兩個工具都可以跑 spectra，但<strong>行為有差異</strong>。<strong>Claude Code 是正規行為</strong>，Codex 整合有些非正規的 quirk，會混亂。</p>
+
+    <h3 id="sec-9-1">9-1. 主要差異對照表<a class="anchor-link" href="#sec-9-1">#</a></h3>
+    <table>
+      <thead><tr><th>項目</th><th>Claude Code（正規）</th><th>Codex（非正規）</th></tr></thead>
+      <tbody>
+        <tr><td><strong>自動讀取的指令檔</strong></td><td><code>CLAUDE.md</code>（你目前<strong>沒有</strong>）</td><td><code>AGENTS.md</code>（你<strong>有</strong>）</td></tr>
+        <tr><td><strong>Slash command 格式</strong></td><td><code>/spectra-propose</code></td><td><code>/spectra-propose</code>（一樣）</td></tr>
+        <tr><td><strong>propose 產出位置</strong></td><td><code>openspec/changes/&lt;name&gt;/</code></td><td>一般 change 也是 <code>openspec/changes/&lt;name&gt;/</code></td></tr>
+        <tr><td><strong>parked change 位置</strong></td><td>還在 <code>openspec/changes/&lt;name&gt;/</code>，<strong>只改 DB 標記</strong></td><td>會搬到 <code>.git/spectra-app/changes/&lt;name&gt;/</code>（bug 行為）</td></tr>
+        <tr><td><strong><code>unpark</code> 行為</strong></td><td>只改 DB 標記，<strong>檔案不動</strong></td><td>會把資料夾從 <code>.git/...</code> 搬回 <code>openspec/changes/...</code></td></tr>
+        <tr><td><strong><code>.spectra.yaml</code> 開關</strong></td><td>都吃</td><td>都吃</td></tr>
+        <tr><td><strong>TDD / audit 等模式</strong></td><td>都支援</td><td>都支援</td></tr>
+      </tbody>
+    </table>
+
+    <h3 id="sec-9-2">9-2. 規則檔的雙工具相容（重要）<a class="anchor-link" href="#sec-9-2">#</a></h3>
+    <p>你目前 <a href="AGENTS.md">AGENTS.md</a> 寫的規則（繁中、UTF-8、檔案存取限制等）</p>
+    <ul>
+      <li>✅ <strong>Codex 會自動讀</strong></li>
+      <li>❌ <strong>Claude Code 不會自動讀</strong>（會讀的是 <code>CLAUDE.md</code>）</li>
+    </ul>
+
+    <p>要讓兩邊都生效，建議</p>
+<pre><code># 建一個 CLAUDE.md，內容只寫一行 @AGENTS.md
+echo "@AGENTS.md" &gt; CLAUDE.md</code></pre>
+
+    <p>這樣</p>
+    <ul>
+      <li>Claude Code 自動讀 <code>CLAUDE.md</code> → 引用 <code>AGENTS.md</code> ✅</li>
+      <li>Codex 自動讀 <code>AGENTS.md</code> ✅</li>
+      <li>只維護一份規則（在 <code>AGENTS.md</code>），不會分裂 ✅</li>
+    </ul>
+
+    <h3 id="sec-9-3">9-3. 個人踩坑心得<a class="anchor-link" href="#sec-9-3">#</a></h3>
+    <div class="callout callout-tip">
+      <p>💡 之前用 Codex 跑 <code>/spectra-propose</code>，<strong>4 份文件居然不在 <code>openspec/changes/</code>，而是跑到 <code>.git/spectra-app/changes/</code></strong>。
+      想看必須先 <code>unpark</code>，但 <code>unpark</code> 在正規 spectra 應該只是改 DB 標記，<strong>Codex 卻把整個資料夾搬走</strong>。</p>
+      <p>結果造成</p>
+      <ol>
+        <li><code>.git/</code> 結構壞掉，git 指令一直報 <code>not a git repository</code></li>
+        <li>直接想 <code>git init</code> 也卡住，因為 <code>.git/</code> 已存在但裡面結構不對</li>
+      </ol>
+      <p><strong>結論</strong>：跑 spectra 用 <strong>Claude Code</strong>，不要用 Codex。Codex 的 spectra 整合會把 <code>.git/</code> 當垃圾桶。</p>
+    </div>
+
+    <h3 id="sec-9-4">9-4. 怎麼判斷你現在用的是哪個工具<a class="anchor-link" href="#sec-9-4">#</a></h3>
+    <table>
+      <thead><tr><th>你看到的</th><th>表示用的是</th></tr></thead>
+      <tbody>
+        <tr><td>訊息來自 <code>Claude Code</code> 的 CLI / IDE 擴充</td><td>Claude Code</td></tr>
+        <tr><td>提示符或介面寫 <code>codex&gt;</code></td><td>Codex</td></tr>
+        <tr><td>Slash command 一樣是 <code>/spectra-X</code></td><td>兩個都會這樣</td></tr>
+        <tr><td><code>propose</code> 完 4 份文件在 <code>openspec/changes/&lt;name&gt;/</code></td><td>Claude Code</td></tr>
+        <tr><td><code>propose</code> 完 4 份文件跑去 <code>.git/spectra-app/changes/&lt;name&gt;/</code></td><td>Codex（建議改用 Claude Code）</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+</main>
+
+</div><!-- /.app -->
+
+<button class="back-top" id="backTop" title="回到頂端" aria-label="Back to top">↑</button>
+
+<script>
+(function() {
+  // ===== Theme toggle =====
+  var themeBtn = document.querySelector('.theme-toggle');
+  var savedTheme = localStorage.getItem('spectra-theme');
+  if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+    document.documentElement.setAttribute('data-theme', 'dark');
+    themeBtn.textContent = '☀️';
+  }
+  themeBtn.addEventListener('click', function() {
+    var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    if (isDark) {
+      document.documentElement.removeAttribute('data-theme');
+      localStorage.setItem('spectra-theme', 'light');
+      themeBtn.textContent = '🌙';
+    } else {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      localStorage.setItem('spectra-theme', 'dark');
+      themeBtn.textContent = '☀️';
+    }
+  });
+
+  // ===== Mobile menu =====
+  var sidebar = document.getElementById('sidebar');
+  var menuBtn = document.querySelector('.menu-toggle');
+  var backdrop = document.querySelector('.backdrop');
+  function closeMenu() { sidebar.classList.remove('open'); backdrop.classList.remove('open'); }
+  menuBtn.addEventListener('click', function() {
+    sidebar.classList.toggle('open');
+    backdrop.classList.toggle('open');
+  });
+  backdrop.addEventListener('click', closeMenu);
+  // Close menu after clicking a TOC link (mobile)
+  document.querySelectorAll('.toc a').forEach(function(a) {
+    a.addEventListener('click', function() {
+      if (window.innerWidth <= 900) closeMenu();
+    });
+  });
+
+  // ===== Scrollspy: highlight active TOC item =====
+  var tocLinks = Array.prototype.slice.call(document.querySelectorAll('.toc a'));
+  var hashToLink = {};
+  tocLinks.forEach(function(a) { hashToLink[a.getAttribute('href')] = a; });
+
+  var headings = document.querySelectorAll('.content h2[id], .content h3[id]');
+  var visibleSet = new Set();
+
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      var id = '#' + entry.target.id;
+      if (entry.isIntersecting) visibleSet.add(id);
+      else visibleSet.delete(id);
+    });
+    // Pick the first visible heading from top
+    var firstVisible = null;
+    for (var i = 0; i < headings.length; i++) {
+      var id = '#' + headings[i].id;
+      if (visibleSet.has(id)) { firstVisible = id; break; }
+    }
+    tocLinks.forEach(function(a) { a.classList.remove('active'); });
+    if (firstVisible && hashToLink[firstVisible]) {
+      hashToLink[firstVisible].classList.add('active');
+    }
+  }, { rootMargin: '-10% 0px -75% 0px', threshold: 0 });
+
+  headings.forEach(function(h) { observer.observe(h); });
+
+  // ===== Search filter (filters TOC links by text) =====
+  var searchInput = document.getElementById('search');
+  var searchClear = document.getElementById('searchClear');
+  searchInput.addEventListener('input', function() {
+    var q = searchInput.value.trim().toLowerCase();
+    searchClear.classList.toggle('active', q.length > 0);
+    var topItems = document.querySelectorAll('#toc > li');
+    topItems.forEach(function(topLi) {
+      var topAnchor = topLi.querySelector(':scope > a');
+      var topMatch = topAnchor.textContent.toLowerCase().indexOf(q) !== -1;
+      var anyChildMatch = false;
+      var childItems = topLi.querySelectorAll(':scope > ol > li');
+      childItems.forEach(function(li) {
+        var aText = li.querySelector('a').textContent.toLowerCase();
+        var match = aText.indexOf(q) !== -1;
+        li.classList.toggle('hidden', q && !match && !topMatch);
+        if (match) anyChildMatch = true;
+      });
+      topLi.classList.toggle('hidden', q && !topMatch && !anyChildMatch);
+    });
+  });
+  searchClear.addEventListener('click', function() {
+    searchInput.value = '';
+    searchInput.dispatchEvent(new Event('input'));
+    searchInput.focus();
+  });
+
+  // ===== Back to top =====
+  var backTop = document.getElementById('backTop');
+  window.addEventListener('scroll', function() {
+    backTop.classList.toggle('visible', window.scrollY > 400);
+  });
+  backTop.addEventListener('click', function() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  // ===== Copy code button =====
+  document.querySelectorAll('.content pre').forEach(function(pre) {
+    var btn = document.createElement('button');
+    btn.className = 'copy-btn';
+    btn.textContent = '複製';
+    btn.addEventListener('click', function() {
+      var code = pre.querySelector('code') ? pre.querySelector('code').textContent : pre.textContent;
+      navigator.clipboard.writeText(code).then(function() {
+        btn.textContent = '已複製 ✓';
+        btn.classList.add('copied');
+        setTimeout(function() { btn.textContent = '複製'; btn.classList.remove('copied'); }, 1500);
+      }).catch(function() {
+        btn.textContent = '失敗';
+        setTimeout(function() { btn.textContent = '複製'; }, 1500);
+      });
+    });
+    pre.appendChild(btn);
+  });
+
+  // ===== Initial active TOC =====
+  if (window.location.hash) {
+    var initial = hashToLink[window.location.hash];
+    if (initial) initial.classList.add('active');
+  }
+})();
+</script>
+
+</body>
+</html>

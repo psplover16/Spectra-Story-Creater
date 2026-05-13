@@ -1,0 +1,72 @@
+schema: spec-driven
+
+context: |
+  專案類型: 小說輔助應用程式
+
+  技術棧:
+    前端: Vue 3 + TypeScript + Tailwind CSS
+    AI 整合: Codex CLI、Claude Code（皆以子行程方式呼叫的本機 CLI）
+
+  專案說明:
+  本專案輔助使用者利用 AI 生成小說，幫助沒有寫過小說的使用者完成一部自己的小說。
+  一開始使用者必須輸入小說名稱、小說基本世界觀、小說風格類型等等資料……
+  使用者會提供各角色的姓名、性格、個人能力、外觀、社會地位等等基本資料，
+  以及故事發生背景、故事設定。
+  AI 要輔助、引導使用者針對角色性格去進行劇情、角色對話、角色相遇等等事件，
+  角色的性格可能會經歷某些事件而有所變化。
+
+  AI 切換機制:
+  由於不同陣營（正派、反派等）的劇情走向與對話風格差異大，
+  系統需允許每個角色、每個行動，甚至每段劇情發展，獨立綁定要由哪一個 AI CLI 回應。
+  目前支援的 AI 後端為：
+    - Codex CLI
+    - Claude Code（Claude 官方 CLI）
+  「切換 AI 模型」在本專案中的明確定義是：選擇由 Codex CLI 或 Claude Code 來產生該次回應，
+  兩者皆以子行程（subprocess）方式呼叫本機已安裝的 CLI，而非直接呼叫 HTTP API。
+
+  使用者一開始不需要提供完整小說的劇情大綱，但每一個章節的大綱必須要提供。
+  AI 會輔助使用者紀錄角色的姓名、性格、個人能力、外觀、社會地位等等基本資料，
+  以及世界觀、各陣營的狀況。
+
+  針對每一個章節，需要可以額外匯出成 HTML 檔案的功能，
+  該 HTML 內容就是該章節的小說內容。
+
+  待確認事項（影響後續規格設計，於 propose 時若仍未定需先釐清）:
+    - UI 語言: 預設繁體中文，是否規劃 i18n？
+    - 執行環境: 瀏覽器 SPA？Electron 桌面？或 Tauri？
+    - 資料持久化: IndexedDB？本機 JSON 檔？是否雲端同步？
+    - 章節 HTML 匯出: 離線打包單檔（含內嵌樣式）？或即時渲染？
+    - 隱私: 是否所有小說資料僅存本機、不外傳？
+
+rules:
+  proposal:
+    - 以繁體中文撰寫，必要時保留英文技術名詞
+    - 需明列「Non-goals」與「對既有規格的影響」
+    - 涉及 AI 行為的提案需指明預期使用 Codex CLI 或 Claude Code（或兩者皆可）
+  tasks:
+    - 每項任務工作量估計不超過 2 小時，超過請拆分
+    - 涉及 AI 呼叫的任務需註明使用哪個 CLI 與 CLI 不可用時的 fallback 策略
+    - 涉及檔案 I/O 的任務需註明編碼為 UTF-8（無 BOM 汙染可見文字）
+  spec:
+    - 規格以「使用者可觀察行為」為主，避免綁死實作細節
+    - 描述 AI 行為時使用抽象詞「AI 回應來源」，而非寫死特定 CLI 名稱，
+      具體 CLI 對應放在 design 或實作層
+
+# Project context (optional)
+# This is shown to AI when creating artifacts.
+# Add your tech stack, conventions, style guides, domain knowledge, etc.
+# Example:
+#   context: |
+#     Tech stack: TypeScript, React, Node.js
+#     We use conventional commits
+#     Domain: e-commerce platform
+
+# Per-artifact rules (optional)
+# Add custom rules for specific artifacts.
+# Example:
+#   rules:
+#     proposal:
+#       - Keep proposals under 500 words
+#       - Always include a "Non-goals" section
+#     tasks:
+#       - Break tasks into chunks of max 2 hours

@@ -1,0 +1,36 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`webPage template > snapshot 穩定 1`] = `
+"<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8" />
+<title>鹿鼎記 — 揚州街頭</title>
+<style>
+  body { font-family: "PingFang TC", sans-serif; margin: 0; display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; color: #1f2937; }
+  aside { background: #f3f4f6; padding: 1rem; border-right: 1px solid #e5e7eb; }
+  aside h2 { font-size: 1rem; margin-top: 0; }
+  aside ul { list-style: none; padding: 0; margin: 0; }
+  aside li { margin: 0.3rem 0; }
+  aside a { color: #1d4ed8; text-decoration: none; }
+  aside .not-exported { color: #9ca3af; }
+  main { padding: 2rem; max-width: 720px; line-height: 1.8; }
+  h1 { font-size: 1.5rem; }
+  p { text-indent: 2em; margin: 0.6em 0; }
+</style>
+</head>
+<body>
+<aside>
+  <h2>鹿鼎記</h2>
+  <ul>
+<li><a href="chapter-1-揚州街頭-web-page.html">1. 揚州街頭</a></li>
+  </ul>
+</aside>
+<main>
+  <h1>揚州街頭</h1>
+<p>段一。</p>
+<p>段二。</p>
+</main>
+</body>
+</html>"
+`;

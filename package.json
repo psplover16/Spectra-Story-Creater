@@ -1,0 +1,59 @@
+{
+  "name": "spectra-story-creater",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "本機 AI 輔助小說創作桌面 App（Vue 3 + TS + Tailwind + Electron）",
+  "main": "dist-electron/main.cjs",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "electron:dev": "vite",
+    "pkg": "pnpm run build && electron-builder --config electron-builder.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "tsc": "vue-tsc -p tsconfig.json && tsc -p tsconfig.node.json",
+    "typecheck": "vue-tsc -p tsconfig.json && tsc -p tsconfig.node.json",
+    "lint": "eslint . --ext .ts,.tsx,.vue,.js,.cjs",
+    "lint:fix": "eslint . --ext .ts,.tsx,.vue,.js,.cjs --fix",
+    "format": "prettier --check .",
+    "format:write": "prettier --write ."
+  },
+  "dependencies": {
+    "pinia": "^2.3.0",
+    "vue": "^3.5.13",
+    "vue-router": "^4.5.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "@typescript-eslint/eslint-plugin": "^8.19.0",
+    "@typescript-eslint/parser": "^8.19.0",
+    "@vitejs/plugin-vue": "^5.2.1",
+    "@vue/test-utils": "^2.4.6",
+    "autoprefixer": "^10.4.20",
+    "electron": "^33.2.1",
+    "electron-builder": "^25.1.8",
+    "eslint": "^8.57.1",
+    "eslint-plugin-vue": "^9.32.0",
+    "happy-dom": "^15.11.7",
+    "postcss": "^8.4.49",
+    "prettier": "^3.4.2",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.11",
+    "vite-plugin-electron": "^0.28.8",
+    "vitest": "^2.1.8",
+    "vue-tsc": "^2.1.10"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "electron",
+      "esbuild"
+    ]
+  }
+}

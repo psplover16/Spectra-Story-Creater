@@ -1,0 +1,38 @@
+{
+  "appId": "com.spectra.story-creater",
+  "productName": "Spectra 小說創作助手",
+  "directories": {
+    "output": "release",
+    "buildResources": "build"
+  },
+  "asar": true,
+  "files": ["dist/**/*", "dist-electron/**/*", "package.json"],
+  "extraMetadata": {
+    "main": "dist-electron/main.cjs"
+  },
+  "win": {
+    "target": [
+      {
+        "target": "nsis",
+        "arch": ["x64"]
+      }
+    ],
+    "artifactName": "${productName}-${version}-win-${arch}.${ext}"
+  },
+  "nsis": {
+    "oneClick": false,
+    "perMachine": false,
+    "allowToChangeInstallationDirectory": true,
+    "deleteAppDataOnUninstall": false
+  },
+  "mac": {
+    "target": [
+      {
+        "target": "dmg",
+        "arch": ["x64", "arm64"]
+      }
+    ],
+    "artifactName": "${productName}-${version}-mac-${arch}.${ext}",
+    "category": "public.app-category.productivity"
+  }
+}

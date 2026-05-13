@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude Code 自訂功能介紹</title>
+<style>
+  :root {
+    --bg: #fafaf9;
+    --bg-secondary: #f5f5f4;
+    --bg-card: #ffffff;
+    --text: #1c1917;
+    --text-muted: #57534e;
+    --text-light: #78716c;
+    --accent: #c2410c;
+    --accent-hover: #9a3412;
+    --accent-bg: #fff7ed;
+    --border: #e7e5e4;
+    --code-bg: #292524;
+    --code-text: #fafaf9;
+    --code-inline-bg: #f5f5f4;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08);
+    --shadow-lg: 0 4px 12px rgba(0,0,0,0.10);
+  }
+
+  * { box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    margin: 0;
+    font-family: -apple-system, "Segoe UI", "PingFang TC", "Microsoft JhengHei", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    font-size: 15px;
+  }
+
+  /* Layout */
+  .layout {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    min-height: 100vh;
+  }
+
+  /* Sidebar */
+  .sidebar {
+    background: var(--bg-secondary);
+    border-right: 1px solid var(--border);
+    padding: 24px 20px;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+  }
+
+  .sidebar h1 {
+    font-size: 18px;
+    margin: 0 0 4px 0;
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  .sidebar .subtitle {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+  }
+
+  .sidebar h2 {
+    font-size: 13px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
+    margin: 20px 0 8px 0;
+    font-weight: 600;
+  }
+
+  .sidebar ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .sidebar a.toc-link {
+    display: block;
+    padding: 6px 10px;
+    color: var(--text);
+    text-decoration: none;
+    border-radius: 6px;
+    font-size: 14px;
+    border-left: 3px solid transparent;
+    transition: all 0.15s;
+  }
+
+  .sidebar a.toc-link:hover {
+    background: var(--bg-card);
+    color: var(--accent);
+  }
+
+  .sidebar a.toc-link.active {
+    background: var(--accent-bg);
+    color: var(--accent);
+    border-left-color: var(--accent);
+    font-weight: 600;
+  }
+
+  .sidebar .toc-num {
+    color: var(--text-light);
+    font-size: 12px;
+    margin-right: 6px;
+  }
+
+  /* Bookmarks panel */
+  .bookmarks-panel {
+    background: var(--bg-card);
+    border: 1px dashed var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    margin-top: 16px;
+  }
+
+  .bookmarks-panel:empty::before {
+    content: "（尚未收藏任何章節）";
+    color: var(--text-light);
+    font-size: 12px;
+  }
+
+  .bookmark-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 6px;
+    border-radius: 4px;
+    font-size: 13px;
+  }
+
+  .bookmark-item:hover { background: var(--bg-secondary); }
+
+  .bookmark-item a {
+    color: var(--text);
+    text-decoration: none;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .bookmark-item a:hover { color: var(--accent); }
+
+  .bookmark-remove {
+    background: none;
+    border: none;
+    color: var(--text-light);
+    cursor: pointer;
+    font-size: 14px;
+    padding: 0 4px;
+  }
+
+  .bookmark-remove:hover { color: var(--accent); }
+
+  /* Main */
+  main {
+    padding: 48px 60px 120px;
+    max-width: 880px;
+    width: 100%;
+  }
+
+  main > header {
+    margin-bottom: 40px;
+    padding-bottom: 24px;
+    border-bottom: 2px solid var(--border);
+  }
+
+  main h1 {
+    font-size: 32px;
+    margin: 0 0 8px 0;
+    color: var(--text);
+  }
+
+  main .lead {
+    color: var(--text-muted);
+    font-size: 16px;
+    margin: 0;
+  }
+
+  /* Sections */
+  section {
+    margin-bottom: 48px;
+    scroll-margin-top: 24px;
+  }
+
+  .group-heading {
+    font-size: 22px;
+    color: var(--accent);
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 8px;
+    margin-top: 56px;
+    margin-bottom: 24px;
+  }
+
+  section h3 {
+    font-size: 20px;
+    margin: 0 0 12px 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    scroll-margin-top: 24px;
+  }
+
+  .section-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: white;
+    font-size: 13px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .star-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+    color: var(--text-light);
+    padding: 4px 8px;
+    border-radius: 4px;
+    margin-left: auto;
+    transition: all 0.15s;
+  }
+
+  .star-btn:hover { background: var(--accent-bg); color: var(--accent); }
+  .star-btn.starred { color: #f59e0b; }
+
+  /* Content */
+  p { margin: 0 0 12px 0; }
+
+  ul, ol { padding-left: 24px; margin: 0 0 12px 0; }
+  li { margin-bottom: 6px; }
+
+  strong { color: var(--text); }
+
+  code {
+    background: var(--code-inline-bg);
+    color: var(--accent);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: "SF Mono", Consolas, "Monaco", monospace;
+    font-size: 0.9em;
+  }
+
+  pre {
+    background: var(--code-bg);
+    color: var(--code-text);
+    padding: 16px 20px;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-family: "SF Mono", Consolas, "Monaco", monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    margin: 12px 0 16px 0;
+  }
+
+  pre code {
+    background: none;
+    color: inherit;
+    padding: 0;
+    font-size: inherit;
+  }
+
+  /* Tables */
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 12px 0 16px 0;
+    background: var(--bg-card);
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+
+  th, td {
+    padding: 10px 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+
+  th {
+    background: var(--bg-secondary);
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  tr:last-child td { border-bottom: none; }
+
+  /* Callout */
+  .callout {
+    background: var(--accent-bg);
+    border-left: 4px solid var(--accent);
+    padding: 12px 16px;
+    border-radius: 0 6px 6px 0;
+    margin: 12px 0 16px 0;
+    font-size: 14px;
+  }
+
+  .callout strong { color: var(--accent); }
+
+  /* Brief item */
+  .brief-item {
+    background: var(--bg-card);
+    padding: 14px 18px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    border: 1px solid var(--border);
+  }
+
+  .brief-item h4 {
+    margin: 0 0 6px 0;
+    font-size: 15px;
+    color: var(--accent);
+  }
+
+  .brief-item p { margin: 0; font-size: 14px; color: var(--text-muted); }
+
+  /* Back to top */
+  #backToTop {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: white;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    box-shadow: var(--shadow-lg);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s, transform 0.2s;
+  }
+
+  #backToTop.visible { opacity: 1; pointer-events: auto; }
+  #backToTop:hover { background: var(--accent-hover); transform: translateY(-2px); }
+
+  /* Responsive */
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; }
+    .sidebar {
+      position: static;
+      height: auto;
+      border-right: none;
+      border-bottom: 1px solid var(--border);
+    }
+    main { padding: 24px 20px 80px; }
+    main h1 { font-size: 24px; }
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--text-light); }
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+  <aside class="sidebar">
+    <h1>Claude Code</h1>
+    <div class="subtitle">自訂功能總覽</div>
+
+    <h2>常用功能</h2>
+    <ul id="toc-common">
+      <li><a class="toc-link" href="#claude-md"><span class="toc-num">1</span>CLAUDE.md / AGENTS.md</a></li>
+      <li><a class="toc-link" href="#slash-builtin"><span class="toc-num">2</span>內建斜線命令</a></li>
+      <li><a class="toc-link" href="#slash-custom"><span class="toc-num">3</span>自訂斜線命令</a></li>
+      <li><a class="toc-link" href="#settings"><span class="toc-num">4</span>settings.json 設定檔</a></li>
+      <li><a class="toc-link" href="#permissions"><span class="toc-num">5</span>權限管理</a></li>
+      <li><a class="toc-link" href="#permission-modes"><span class="toc-num">6</span>權限模式</a></li>
+      <li><a class="toc-link" href="#hooks"><span class="toc-num">7</span>Hooks 自動化掛鉤</a></li>
+      <li><a class="toc-link" href="#subagents"><span class="toc-num">8</span>子代理（Subagents）</a></li>
+      <li><a class="toc-link" href="#memory"><span class="toc-num">9</span>記憶系統（Memory）</a></li>
+      <li><a class="toc-link" href="#model"><span class="toc-num">10</span>模型切換</a></li>
+      <li><a class="toc-link" href="#cost"><span class="toc-num">11</span>查看花費與 Token 用量</a></li>
+    </ul>
+
+    <h2>較少用功能</h2>
+    <ul id="toc-less">
+      <li><a class="toc-link" href="#mcp">MCP 伺服器</a></li>
+      <li><a class="toc-link" href="#ide">IDE 整合</a></li>
+      <li><a class="toc-link" href="#keybindings">鍵盤快速鍵</a></li>
+      <li><a class="toc-link" href="#statusline">狀態列</a></li>
+      <li><a class="toc-link" href="#output-styles">輸出樣式</a></li>
+      <li><a class="toc-link" href="#schedule">排程代理</a></li>
+      <li><a class="toc-link" href="#web">WebSearch / WebFetch</a></li>
+      <li><a class="toc-link" href="#api">API 金鑰與計費</a></li>
+    </ul>
+
+    <h2>★ 我的書籤</h2>
+    <div id="bookmarks" class="bookmarks-panel"></div>
+  </aside>
+
+  <main>
+    <header>
+      <h1>Claude Code 自訂功能介紹</h1>
+      <p class="lead">本文件整理 Claude Code 主要的自訂與設定方式。常用功能附詳細說明與範例，較少用的僅做簡介。每個章節右側可點 ★ 加入「我的書籤」（瀏覽器本地保存）。</p>
+    </header>
+
+    <h2 class="group-heading">常用功能</h2>
+
+    <!-- 1. CLAUDE.md -->
+    <section id="claude-md">
+      <h3>
+        <span class="section-num">1</span>
+        CLAUDE.md / AGENTS.md（專案指令檔）
+        <button class="star-btn" data-target="claude-md" data-title="CLAUDE.md / AGENTS.md">☆</button>
+      </h3>
+
+      <p><strong>用途</strong>：放在專案根目錄的 markdown 檔，每次 Claude Code 啟動時會自動讀入，告訴 Claude「這個專案的規則、慣例、避免事項」。</p>
+
+      <p><strong>兩種檔名差異</strong>：</p>
+      <ul>
+        <li><code>CLAUDE.md</code> — Claude Code 專屬</li>
+        <li><code>AGENTS.md</code> — 跨代理通用標準（Codex、Cursor 等也讀）</li>
+        <li>兩者可同時存在；Claude 會兩個都讀</li>
+      </ul>
+
+      <p><strong>位置層級</strong>：</p>
+      <ul>
+        <li>專案根目錄：所有人都套用</li>
+        <li>子目錄：Claude 進入該目錄才生效</li>
+        <li>使用者層級 <code>~/.claude/CLAUDE.md</code>：跨所有專案套用</li>
+      </ul>
+
+      <p><strong>使用範例</strong>：</p>
+<pre><code># 我的專案
+
+## 程式風格
+- 使用 TypeScript strict mode
+- 縮排 2 空格、單引號
+
+## 測試
+- 以 vitest 撰寫單元測試
+- 不可 mock 資料庫（會跑真實 docker container）
+
+## 不要做
+- 不要新增 dependency 沒先問我
+- 不要動 `legacy/` 資料夾</code></pre>
+
+      <div class="callout"><strong>提示</strong>：可用 <code>/init</code> 命令讓 Claude 自動分析專案產生初版 CLAUDE.md。</div>
+    </section>
+
+    <!-- 2. Built-in Slash Commands -->
+    <section id="slash-builtin">
+      <h3>
+        <span class="section-num">2</span>
+        內建斜線命令
+        <button class="star-btn" data-target="slash-builtin" data-title="內建斜線命令">☆</button>
+      </h3>
+
+      <p><strong>用途</strong>：在對話框輸入 <code>/</code> 觸發，執行系統層級操作。</p>
+
+      <table>
+        <thead><tr><th>命令</th><th>功能</th></tr></thead>
+        <tbody>
+          <tr><td><code>/help</code></td><td>顯示說明與快捷鍵</td></tr>
+          <tr><td><code>/clear</code></td><td>清除目前對話歷史（重新開始）</td></tr>
+          <tr><td><code>/model</code></td><td>切換模型（Opus / Sonnet / Haiku）</td></tr>
+          <tr><td><code>/config</code></td><td>開啟設定介面</td></tr>
+          <tr><td><code>/permissions</code></td><td>管理工具權限</td></tr>
+          <tr><td><code>/cost</code></td><td>查看本次工作階段花費</td></tr>
+          <tr><td><code>/init</code></td><td>為當前專案自動產生 CLAUDE.md</td></tr>
+          <tr><td><code>/compact</code></td><td>壓縮對話歷史以節省 context</td></tr>
+          <tr><td><code>/resume</code></td><td>恢復先前的對話</td></tr>
+          <tr><td><code>/agents</code></td><td>管理子代理</td></tr>
+          <tr><td><code>/hooks</code></td><td>管理掛鉤</td></tr>
+          <tr><td><code>/login</code> / <code>/logout</code></td><td>帳號登入登出</td></tr>
+          <tr><td><code>/mcp</code></td><td>管理 MCP 伺服器</td></tr>
+          <tr><td><code>/statusline</code></td><td>設定底部狀態列</td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout"><strong>使用方式</strong>：直接在對話框輸入 <code>/</code>，會跳出自動完成清單。</div>
+    </section>
+
+    <!-- 3. Custom Slash Commands -->
+    <section id="slash-custom">
+      <h3>
+        <span class="section-num">3</span>
+        自訂斜線命令
+        <button class="star-btn" data-target="slash-custom" data-title="自訂斜線命令">☆</button>
+      </h3>
+
+      <p><strong>用途</strong>：把常用的 prompt 範本封裝成自己的 <code>/your-command</code>，免去每次都打一長串。</p>
+
+      <p><strong>位置</strong>：</p>
+      <ul>
+        <li>專案層級：<code>.claude/commands/&lt;name&gt;.md</code>（隨專案版控）</li>
+        <li>使用者層級：<code>~/.claude/commands/&lt;name&gt;.md</code>（跨專案）</li>
+      </ul>
+
+      <p><strong>建立範例</strong> — 翻譯命令 <code>.claude/commands/translate-zh.md</code>：</p>
+<pre><code>---
+description: 把選取的文字翻譯成繁體中文
+---
+
+請把以下英文翻譯成繁體中文，保留專業術語不譯：
+
+$ARGUMENTS</code></pre>
+
+      <p>之後輸入 <code>/translate-zh Hello world</code> 即可觸發。</p>
+
+      <p><strong>進階特性</strong>：</p>
+      <ul>
+        <li><code>$ARGUMENTS</code> — 接收使用者參數</li>
+        <li>frontmatter 可指定 <code>model</code>（不同命令用不同模型）</li>
+        <li>frontmatter 可指定 <code>allowed-tools</code> 限制可用工具</li>
+        <li>內容可包含 bash 命令（用 <code>!</code> 前綴執行）</li>
+        <li>可放在子目錄建立命名空間，例如 <code>.claude/commands/git/sync.md</code> → <code>/git:sync</code></li>
+      </ul>
+
+      <p><strong>實用範例</strong>：</p>
+<pre><code>---
+description: 為當前 PR 寫測試
+allowed-tools: Read, Edit, Write, Bash(npm test:*)
+---
+
+請為以下檔案補上 vitest 測試：
+$ARGUMENTS
+
+要求：
+- 涵蓋 happy path 與錯誤情境
+- 用 describe/it 分組
+- 完成後跑 `npm test` 確認通過</code></pre>
+    </section>
+
+    <!-- 4. settings.json -->
+    <section id="settings">
+      <h3>
+        <span class="section-num">4</span>
+        settings.json 設定檔
+        <button class="star-btn" data-target="settings" data-title="settings.json">☆</button>
+      </h3>
+
+      <p><strong>用途</strong>：以 JSON 統一管理權限、模型、環境變數、Hooks。</p>
+
+      <p><strong>三種層級</strong>（後者覆蓋前者）：</p>
+      <ol>
+        <li><code>~/.claude/settings.json</code> — 使用者全域</li>
+        <li><code>.claude/settings.json</code> — 專案共用（入版控）</li>
+        <li><code>.claude/settings.local.json</code> — 個人覆寫（不入版控）</li>
+      </ol>
+
+      <p><strong>常見設定範例</strong>：</p>
+<pre><code>{
+  "model": "claude-opus-4-7",
+  "permissions": {
+    "allow": [
+      "Bash(npm test:*)",
+      "Bash(npm run build:*)",
+      "Read(./src/**)"
+    ],
+    "deny": [
+      "Bash(rm -rf:*)",
+      "Read(./.env)"
+    ]
+  },
+  "env": {
+    "DEBUG": "true",
+    "NODE_ENV": "development"
+  },
+  "hooks": {
+    "PostToolUse": [...]
+  }
+}</code></pre>
+
+      <div class="callout"><strong>小撇步</strong>：把敏感權限放 <code>settings.local.json</code>，公用規範放 <code>settings.json</code> 入版控。</div>
+    </section>
+
+    <!-- 5. Permissions -->
+    <section id="permissions">
+      <h3>
+        <span class="section-num">5</span>
+        權限管理（Permissions）
+        <button class="star-btn" data-target="permissions" data-title="權限管理">☆</button>
+      </h3>
+
+      <p><strong>用途</strong>：細粒度控制 Claude 可使用哪些工具、可碰哪些檔案/網域。</p>
+
+      <p><strong>規則語法</strong>：<code>Tool(pattern)</code></p>
+
+      <table>
+        <thead><tr><th>規則</th><th>意義</th></tr></thead>
+        <tbody>
+          <tr><td><code>Bash(npm:*)</code></td><td>允許所有 <code>npm</code> 開頭命令</td></tr>
+          <tr><td><code>Bash(git status)</code></td><td>只允許這個確切命令</td></tr>
+          <tr><td><code>Read(./docs/**)</code></td><td>允許讀取 docs 下任何層深</td></tr>
+          <tr><td><code>Edit(*.md)</code></td><td>允許編輯 markdown 檔</td></tr>
+          <tr><td><code>WebFetch(domain:github.com)</code></td><td>允許抓 github.com</td></tr>
+          <tr><td><code>WebFetch</code></td><td>允許所有網域</td></tr>
+        </tbody>
+      </table>
+
+      <p><strong>三種設定方式</strong>：</p>
+      <ol>
+        <li>對話中遇到工具呼叫時，按 <strong>「永遠允許」</strong> → 自動寫入 <code>settings.local.json</code></li>
+        <li>輸入 <code>/permissions</code> 互動式管理</li>
+        <li>手動編輯 <code>settings.json</code></li>
+      </ol>
+
+      <p><strong>allow / deny / ask 三層</strong>：</p>
+<pre><code>{
+  "permissions": {
+    "allow": ["Bash(npm:*)"],
+    "deny":  ["Bash(rm -rf:*)", "Read(./secrets/**)"],
+    "ask":   ["Bash(git push:*)"]
+  }
+}</code></pre>
+
+      <div class="callout"><strong>建議</strong>：把破壞性命令（<code>rm -rf</code>、<code>git push --force</code>）寫進 <code>deny</code>，可避免任何時刻誤觸。</div>
+    </section>
+
+    <!-- 6. Permission Modes -->
+    <section id="permission-modes">
+      <h3>
+        <span class="section-num">6</span>
+        權限模式（Permission Modes）
+        <button class="star-btn" data-target="permission-modes" data-title="權限模式">☆</button>
+      </h3>
+
+      <p><strong>用途</strong>：四種模式對應不同自主程度，按 <strong>Shift + Tab</strong> 循環切換。</p>
+
+      <table>
+        <thead><tr><th>模式</th><th>行為</th><th>適用情境</th></tr></thead>
+        <tbody>
+          <tr><td><code>default</code></td><td>每次工具呼叫都需批准</td><td>陌生任務、初次使用</td></tr>
+          <tr><td><code>acceptEdits</code></td><td>自動允許檔案編輯（其他仍需批准）</td><td>已知安全的批量改檔</td></tr>
+          <tr><td><code>plan</code></td><td>規劃模式，僅讀取，不會改檔</td><td>探索陌生專案、設計方案</td></tr>
+          <tr><td><code>bypassPermissions</code></td><td>跳過所有權限提示（最高自主）</td><td>完全信任的自動化（小心！）</td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout"><strong>注意</strong>：<code>bypassPermissions</code> 等於放棄安全網。建議只在隔離環境（VM、Docker、worktree）使用。</div>
+
+      <p><strong>查看目前模式</strong>：在底部狀態列會顯示當前模式名稱。</p>
+    </section>
+
+    <!-- 7. Hooks -->
+    <section id="hooks">
+      <h3>
+        <span class="section-num">7</span>
+        Hooks 自動化掛鉤
+        <button class="star-btn" data-target="hooks" data-title="Hooks 自動化掛鉤">☆</button>
+      </h3>
+
+      <p><strong>用途</strong>：在 Claude 工具呼叫前後或其他事件時，自動執行你定義的 shell 命令。是「<strong>每次……就……</strong>」這類自動化的唯一正解（記憶系統做不到）。</p>
+
+      <p><strong>事件類型</strong>：</p>
+      <ul>
+        <li><code>PreToolUse</code> — 工具呼叫前（可阻擋）</li>
+        <li><code>PostToolUse</code> — 工具呼叫後（可後處理）</li>
+        <li><code>UserPromptSubmit</code> — 使用者送出訊息時</li>
+        <li><code>Stop</code> — Claude 結束回應時</li>
+        <li><code>SubagentStop</code> — 子代理結束時</li>
+        <li><code>Notification</code> — Claude 發送通知時</li>
+      </ul>
+
+      <p><strong>範例 1：每次編輯後自動跑 prettier</strong>（<code>.claude/settings.json</code>）：</p>
+<pre><code>{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "npx prettier --write \"$CLAUDE_FILE_PATHS\""
+          }
+        ]
+      }
+    ]
+  }
+}</code></pre>
+
+      <p><strong>範例 2：Claude 回應結束時播音效</strong>：</p>
+<pre><code>{
+  "hooks": {
+    "Stop": [
+      { "hooks": [{ "type": "command", "command": "afplay /System/Library/Sounds/Glass.aiff" }] }
+    ]
+  }
+}</code></pre>
+
+      <p><strong>範例 3：阻擋對 .env 的讀取</strong>：</p>
+<pre><code>{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ \"${CLAUDE_FILE_PATHS}\" != *\".env\"* ] || (echo 'BLOCKED' && exit 2)"
+          }
+        ]
+      }
+    ]
+  }
+}</code></pre>
+
+      <div class="callout"><strong>提示</strong>：可用 <code>/hooks</code> 互動式建立，會自動寫入 settings.json。</div>
+    </section>
+
+    <!-- 8. Subagents -->
+    <section id="subagents">
+      <h3>
+        <span class="section-num">8</span>
+        子代理（Subagents）
+        <button class="star-btn" data-target="subagents" data-title="子代理">☆</button>
+      </h3>
+
+      <p><strong>用途</strong>：把特定領域的工作交給專門子代理處理，<strong>獨立 context</strong>、可配置不同模型、可限制可用工具。主代理保持輕量。</p>
+
+      <p><strong>位置</strong>：</p>
+      <ul>
+        <li>專案：<code>.claude/agents/&lt;name&gt;.md</code></li>
+        <li>使用者：<code>~/.claude/agents/&lt;name&gt;.md</code></li>
+      </ul>
+
+      <p><strong>範例</strong> — 程式碼審查代理 <code>.claude/agents/code-reviewer.md</code>：</p>
+<pre><code>---
+name: code-reviewer
+description: 資深工程師，專責審查 PR。當使用者請求 code review 時自動使用。
+tools: Read, Grep, Glob, Bash(git diff:*)
+model: sonnet
+---
+
+你是資深工程師，請從以下角度審查程式碼：
+
+1. **安全性** — 注入、認證、敏感資料外洩
+2. **效能** — N+1、記憶體浪費
+3. **可讀性** — 命名、結構
+4. **測試** — 覆蓋率、邊界條件
+
+回報格式：分嚴重等級（critical / major / minor），每項給出檔案:行號。</code></pre>
+
+      <p><strong>呼叫方式</strong>：</p>
+      <ul>
+        <li>主代理會依 <code>description</code> 自動判斷何時使用</li>
+        <li>使用者也可明說：「請用 code-reviewer 代理檢查這個 PR」</li>
+        <li>透過 <code>/agents</code> 命令管理</li>
+      </ul>
+
+      <div class="callout"><strong>實用價值</strong>：適合「需大量讀檔但結果只需簡短摘要」的任務（搜尋、審查、研究），可保護主代理 context。</div>
+    </section>
+
+    <!-- 9. Memory -->
+    <section id="memory">
+      <h3>
+        <span class="section-num">9</span>
+        記憶系統（Memory）
+        <button class="star-btn" data-target="memory" data-title="記憶系統">☆</button>
+      </h3>
+
+      <p><strong>用途</strong>：跨對話保留使用者偏好、專案脈絡、回饋指引。Claude 自動讀寫，下次新對話會帶入。</p>
+
+      <p><strong>位置</strong>：<code>~/.claude/projects/&lt;project-id&gt;/memory/</code></p>
+
+      <p><strong>四種記憶類型</strong>：</p>
+      <table>
+        <thead><tr><th>類型</th><th>內容</th><th>例子</th></tr></thead>
+        <tbody>
+          <tr><td><code>user</code></td><td>使用者背景、角色、知識</td><td>「使用者是資深 Go 工程師，前端是新手」</td></tr>
+          <tr><td><code>feedback</code></td><td>使用者對工作方式的指正</td><td>「測試不可 mock 資料庫，原因：上次線上事故」</td></tr>
+          <tr><td><code>project</code></td><td>專案進行中的脈絡</td><td>「2026-03-05 起進入封版期，限制非急件 PR」</td></tr>
+          <tr><td><code>reference</code></td><td>外部系統指引</td><td>「Bug 追蹤在 Linear 的 INGEST 專案」</td></tr>
+        </tbody>
+      </table>
+
+      <p><strong>使用方式</strong>：</p>
+      <ul>
+        <li><strong>明確指定</strong>：「請記住我偏好用 pnpm」</li>
+        <li><strong>自動學習</strong>：Claude 從你的回饋中自動寫入</li>
+        <li><strong>查詢</strong>：「你記得我前面說過什麼嗎？」</li>
+        <li><strong>遺忘</strong>：「請忘掉關於 X 的記憶」</li>
+      </ul>
+
+      <p><strong>檔案結構</strong>：</p>
+      <ul>
+        <li><code>MEMORY.md</code> — 索引（一行一條，連到實際檔）</li>
+        <li><code>user_role.md</code>、<code>feedback_testing.md</code> 等 — 各別記憶</li>
+      </ul>
+
+      <div class="callout"><strong>注意</strong>：記憶可能過時。Claude 會在使用前先驗證是否仍有效（例如 grep 確認檔案仍存在）。</div>
+    </section>
+
+    <!-- 10. Model -->
+    <section id="model">
+      <h3>
+        <span class="section-num">10</span>
+        模型切換（/model）
+        <button class="star-btn" data-target="model" data-title="模型切換">☆</button>
+      </h3>
+
+      <p><strong>用途</strong>：選擇要用哪個 Claude 模型。不同任務適合不同模型。</p>
+
+      <table>
+        <thead><tr><th>模型</th><th>特性</th><th>適用</th></tr></thead>
+        <tbody>
+          <tr><td><code>claude-opus-4-7</code></td><td>最強推理</td><td>複雜架構設計、難解 bug、長規劃</td></tr>
+          <tr><td><code>claude-sonnet-4-6</code></td><td>平衡速度與能力</td><td>日常開發、預設選擇</td></tr>
+          <tr><td><code>claude-haiku-4-5</code></td><td>快速、低成本</td><td>簡單 lint、格式化、明確小修改</td></tr>
+        </tbody>
+      </table>
+
+      <p><strong>切換方式</strong>：</p>
+      <ol>
+        <li>輸入 <code>/model</code> 從清單選</li>
+        <li>或在 <code>settings.json</code> 設定 <code>"model": "claude-opus-4-7"</code></li>
+      </ol>
+
+      <div class="callout"><strong>Fast 模式</strong>：在 Opus 4.6 上可用 <code>/fast</code> 切換，輸出更快但仍是 Opus（不會降級為小模型）。</div>
+    </section>
+
+    <!-- 11. Cost & Token Usage -->
+    <section id="cost">
+      <h3>
+        <span class="section-num">11</span>
+        查看花費與 Token 用量
+        <button class="star-btn" data-target="cost" data-title="查看花費與 Token 用量">☆</button>
+      </h3>
+
+      <p><strong>用途</strong>：知道自己用了多少 token、花了多少錢、context 還剩多少空間。Claude Code 把「花費」與「額度」分成三個層次來看。</p>
+
+      <p><strong>三種情境一張表</strong>：</p>
+      <table>
+        <thead>
+          <tr><th>你想知道</th><th>查詢方式</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>這次對話花了多少錢／用了多少 token</td>
+            <td><code>/cost</code></td>
+          </tr>
+          <tr>
+            <td>對話歷史快滿了沒（context window）</td>
+            <td>底部狀態列百分比</td>
+          </tr>
+          <tr>
+            <td>Pro / Max 訂閱還剩多少額度</td>
+            <td>上 <a href="https://claude.ai" target="_blank" rel="noopener">claude.ai</a> 網站看</td>
+          </tr>
+          <tr>
+            <td>API 帳號用量與帳單</td>
+            <td><a href="https://console.anthropic.com" target="_blank" rel="noopener">console.anthropic.com</a></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h4 style="margin-top:24px;font-size:16px;color:var(--text);">1. 本次對話花費 — <code>/cost</code></h4>
+      <p>在對話框輸入：</p>
+<pre><code>/cost</code></pre>
+      <p>會顯示：</p>
+      <ul>
+        <li>本次工作階段累計花費（USD）</li>
+        <li>已用的 input / output tokens</li>
+        <li>各模型分別的用量（若中途切換過）</li>
+      </ul>
+
+      <h4 style="margin-top:24px;font-size:16px;color:var(--text);">2. Context Window 剩餘空間</h4>
+      <p>Claude Code 底部狀態列會顯示目前 context 使用比例（例如 <code>45% used</code>）。當接近上限時可用：</p>
+      <ul>
+        <li><code>/compact</code> — 壓縮歷史對話、釋放 context（保留摘要）</li>
+        <li><code>/clear</code> — 完全清空對話、重新開始</li>
+      </ul>
+      <div class="callout"><strong>提示</strong>：context 是「對話可記住的容量」，token 是「實際算錢的單位」。兩者不同，但都會隨對話增長。</div>
+
+      <h4 style="margin-top:24px;font-size:16px;color:var(--text);">3. 訂閱方案額度（Pro / Max）</h4>
+      <p>Claude Code <strong>沒有</strong>內建命令查詢訂閱方案剩餘量。要查必須：</p>
+      <ol>
+        <li>用瀏覽器登入 <a href="https://claude.ai" target="_blank" rel="noopener">claude.ai</a></li>
+        <li>左下角頭像 → <strong>Settings</strong> → <strong>Usage</strong></li>
+        <li>會看到本期已用 / 上限與重置時間</li>
+      </ol>
+
+      <h4 style="margin-top:24px;font-size:16px;color:var(--text);">4. API 帳號用量</h4>
+      <p>若用環境變數 <code>ANTHROPIC_API_KEY</code> 走 API，到 <a href="https://console.anthropic.com" target="_blank" rel="noopener">console.anthropic.com</a> → <strong>Usage</strong> 查每日花費明細與圖表。</p>
+
+      <div class="callout">
+        <strong>一句話記住</strong>：最常用就是 <code>/cost</code>，搞定本次對話 80% 的查詢需求。其餘上網看。
+      </div>
+    </section>
+
+    <!-- ===== 較少用功能 ===== -->
+    <h2 class="group-heading">較少用功能</h2>
+
+    <section id="mcp">
+      <div class="brief-item">
+        <h4>MCP（Model Context Protocol）伺服器
+          <button class="star-btn" data-target="mcp" data-title="MCP 伺服器" style="font-size:14px">☆</button>
+        </h4>
+        <p>讓 Claude 連接外部資源/工具：Google Drive、Slack、Notion、資料庫、自家 API 等。透過 <code>/mcp</code> 安裝與管理。設定檔在 <code>~/.claude/mcp.json</code>。</p>
+      </div>
+    </section>
+
+    <section id="ide">
+      <div class="brief-item">
+        <h4>IDE 整合
+          <button class="star-btn" data-target="ide" data-title="IDE 整合" style="font-size:14px">☆</button>
+        </h4>
+        <p>VS Code、JetBrains 都有官方擴充：原生對話面板、檔案參照（@-mention）、選取程式碼即時提問、與 CLI 雙向同步。</p>
+      </div>
+    </section>
+
+    <section id="keybindings">
+      <div class="brief-item">
+        <h4>鍵盤快速鍵自訂
+          <button class="star-btn" data-target="keybindings" data-title="鍵盤快速鍵" style="font-size:14px">☆</button>
+        </h4>
+        <p>編輯 <code>~/.claude/keybindings.json</code> 自訂送出鍵、和弦組合（chord）、快速插入等。</p>
+      </div>
+    </section>
+
+    <section id="statusline">
+      <div class="brief-item">
+        <h4>狀態列（Status Line）
+          <button class="star-btn" data-target="statusline" data-title="狀態列" style="font-size:14px">☆</button>
+        </h4>
+        <p>底部狀態列可自訂顯示內容（git 分支、token 用量、自訂腳本輸出）。透過 <code>/statusline</code> 配置或編輯 settings.json 的 <code>statusLine</code> 欄位。</p>
+      </div>
+    </section>
+
+    <section id="output-styles">
+      <div class="brief-item">
+        <h4>輸出樣式（Output Styles）
+          <button class="star-btn" data-target="output-styles" data-title="輸出樣式" style="font-size:14px">☆</button>
+        </h4>
+        <p>調整 Claude 回應風格（精簡、詳盡、教學模式等）。可在不同對話模式下使用不同預設。</p>
+      </div>
+    </section>
+
+    <section id="schedule">
+      <div class="brief-item">
+        <h4>排程代理（Scheduled Agents / Cron）
+          <button class="star-btn" data-target="schedule" data-title="排程代理" style="font-size:14px">☆</button>
+        </h4>
+        <p>用 <code>/schedule</code> 建立 cron 排程，讓代理定期執行（如每週開 PR 清理過期 feature flag、每天監控部署狀態）。也可用 <code>/loop</code> 在當前對話內循環執行某任務。</p>
+      </div>
+    </section>
+
+    <section id="web">
+      <div class="brief-item">
+        <h4>WebSearch / WebFetch
+          <button class="star-btn" data-target="web" data-title="WebSearch / WebFetch" style="font-size:14px">☆</button>
+        </h4>
+        <p>內建工具，用於搜尋網路或抓取特定 URL。無須額外設定，但可用 <code>permissions</code> 限制可訪問網域，避免意外請求。</p>
+      </div>
+    </section>
+
+    <section id="api">
+      <div class="brief-item">
+        <h4>API 金鑰與計費
+          <button class="star-btn" data-target="api" data-title="API 金鑰與計費" style="font-size:14px">☆</button>
+        </h4>
+        <p><code>/login</code> 走 OAuth（推薦），或設定環境變數 <code>ANTHROPIC_API_KEY</code> 走 API。<code>/cost</code> 查當次工作階段花費。訂閱方案（Pro/Max）透過 OAuth 自動套用。</p>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<button id="backToTop" title="回到頂端">↑</button>
+
+<script>
+  // 1. 滾動時高亮對應 TOC 項目
+  const sections = document.querySelectorAll('section[id]');
+  const tocLinks = document.querySelectorAll('.toc-link');
+
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const id = entry.target.id;
+        tocLinks.forEach(link => {
+          link.classList.toggle('active', link.getAttribute('href') === '#' + id);
+        });
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px', threshold: 0 });
+
+  sections.forEach(s => observer.observe(s));
+
+  // 2. 回到頂端按鈕
+  const backToTop = document.getElementById('backToTop');
+  window.addEventListener('scroll', () => {
+    backToTop.classList.toggle('visible', window.scrollY > 400);
+  });
+  backToTop.addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  // 3. 書籤功能（localStorage）
+  const STORAGE_KEY = 'claude-intro-bookmarks';
+  const bookmarksPanel = document.getElementById('bookmarks');
+
+  function loadBookmarks() {
+    try {
+      return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    } catch { return []; }
+  }
+
+  function saveBookmarks(list) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+  }
+
+  function renderBookmarks() {
+    const list = loadBookmarks();
+    bookmarksPanel.innerHTML = '';
+    list.forEach(bm => {
+      const div = document.createElement('div');
+      div.className = 'bookmark-item';
+      const a = document.createElement('a');
+      a.href = '#' + bm.target;
+      a.textContent = bm.title;
+      const btn = document.createElement('button');
+      btn.className = 'bookmark-remove';
+      btn.textContent = '×';
+      btn.title = '移除';
+      btn.addEventListener('click', () => {
+        const updated = loadBookmarks().filter(x => x.target !== bm.target);
+        saveBookmarks(updated);
+        renderBookmarks();
+        updateStarButtons();
+      });
+      div.appendChild(a);
+      div.appendChild(btn);
+      bookmarksPanel.appendChild(div);
+    });
+  }
+
+  function updateStarButtons() {
+    const list = loadBookmarks();
+    const starredIds = new Set(list.map(x => x.target));
+    document.querySelectorAll('.star-btn').forEach(btn => {
+      const target = btn.dataset.target;
+      if (starredIds.has(target)) {
+        btn.classList.add('starred');
+        btn.textContent = '★';
+      } else {
+        btn.classList.remove('starred');
+        btn.textContent = '☆';
+      }
+    });
+  }
+
+  document.querySelectorAll('.star-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.preventDefault();
+      const target = btn.dataset.target;
+      const title = btn.dataset.title;
+      let list = loadBookmarks();
+      if (list.some(x => x.target === target)) {
+        list = list.filter(x => x.target !== target);
+      } else {
+        list.push({ target, title });
+      }
+      saveBookmarks(list);
+      renderBookmarks();
+      updateStarButtons();
+    });
+  });
+
+  renderBookmarks();
+  updateStarButtons();
+</script>
+
+</body>
+</html>
