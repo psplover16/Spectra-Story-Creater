@@ -42,7 +42,7 @@ function setGlobal(source: string): void {
             class="rounded-md border-slate-300"
             @change="setRole(role, ($event.target as HTMLSelectElement).value)"
           >
-            <option value="">（跟隨上層）</option>
+            <option value="">（使用全域預設）</option>
             <option v-for="s in SOURCES" :key="s" :value="s">
               {{ s }}
             </option>

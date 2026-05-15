@@ -1,12 +1,12 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { mkdir, rm } from 'node:fs/promises'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 
 import { createNovel } from '@/services/files/novelRepository'
 import { listCharacters, readCharacter, writeCharacter } from '@/services/files/characterRepository'
 import { MissingRelationshipTargetError, SchemaValidationError } from '@/services/files/errors'
-import { novelDir } from '@/services/files/paths'
+import { characterFile, charactersDir, novelDir } from '@/services/files/paths'
 
 const ROOT = path.join(tmpdir(), 'spectra-character-repo-tests')
 
@@ -57,5 +57,123 @@ describe('characterRepository', () => {
         ],
       }),
     ).rejects.toBeInstanceOf(MissingRelationshipTargetError)
+  })
+
+  describe('legacy factionId migration on read', () => {
+    async function writeLegacyCharacter(id: string, body: Record<string, unknown>): Promise<void> {
+      await mkdir(charactersDir(novelFolder), { recursive: true })
+      await writeFile(characterFile(novelFolder, id), JSON.stringify(body, null, 2), 'utf-8')
+    }
+
+    it('legacy factionId 為非空字串 → factionIds 變單元素陣列', async () => {
+      await writeLegacyCharacter('c-legacy-1', {
+        id: 'c-legacy-1',
+        name: '韋小寶',
+        personality: '',
+        abilities: [],
+        appearance: '',
+        factionId: 'f-tdh',
+        socialStatus: '',
+        relationships: [],
+        notes: '',
+        createdAt: '',
+        updatedAt: '',
+      })
+      const result = await readCharacter(novelFolder, 'c-legacy-1')
+      expect(result.factionIds).toEqual(['f-tdh'])
+      expect('factionId' in result).toBe(false)
+    })
+
+    it('legacy factionId 為 null → factionIds 變空陣列', async () => {
+      await writeLegacyCharacter('c-legacy-2', {
+        id: 'c-legacy-2',
+        name: '茅十八',
+        personality: '',
+        abilities: [],
+        appearance: '',
+        factionId: null,
+        socialStatus: '',
+        relationships: [],
+        notes: '',
+        createdAt: '',
+        updatedAt: '',
+      })
+      const result = await readCharacter(novelFolder, 'c-legacy-2')
+      expect(result.factionIds).toEqual([])
+    })
+
+    it('legacy 完全沒有 factionId / factionIds → factionIds 變空陣列', async () => {
+      await writeLegacyCharacter('c-legacy-3', {
+        id: 'c-legacy-3',
+        name: '吳六奇',
+        personality: '',
+        abilities: [],
+        appearance: '',
+        socialStatus: '',
+        relationships: [],
+        notes: '',
+        createdAt: '',
+        updatedAt: '',
+      })
+      const result = await readCharacter(novelFolder, 'c-legacy-3')
+      expect(result.factionIds).toEqual([])
+    })
+
+    it('同時含 factionId 與 factionIds → 採用 factionIds 並產生 warn log', async () => {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+      try {
+        await writeLegacyCharacter('c-legacy-4', {
+          id: 'c-legacy-4',
+          name: '康熙',
+          personality: '',
+          abilities: [],
+          appearance: '',
+          factionId: 'f-old',
+          factionIds: ['f-court', 'f-imperial'],
+          socialStatus: '',
+          relationships: [],
+          notes: '',
+          createdAt: '',
+          updatedAt: '',
+        })
+        const result = await readCharacter(novelFolder, 'c-legacy-4')
+        expect(result.factionIds).toEqual(['f-court', 'f-imperial'])
+        expect(warnSpy).toHaveBeenCalled()
+      } finally {
+        warnSpy.mockRestore()
+      }
+    })
+
+    it('write 後檔案不再含 legacy factionId 欄位', async () => {
+      await writeLegacyCharacter('c-legacy-5', {
+        id: 'c-legacy-5',
+        name: '建寧公主',
+        personality: '',
+        abilities: [],
+        appearance: '',
+        factionId: 'f-imperial',
+        socialStatus: '',
+        relationships: [],
+        notes: '',
+        createdAt: '',
+        updatedAt: '',
+      })
+      const loaded = await readCharacter(novelFolder, 'c-legacy-5')
+      await writeCharacter(novelFolder, {
+        id: loaded.id,
+        name: loaded.name,
+        personality: loaded.personality,
+        abilities: loaded.abilities,
+        appearance: loaded.appearance,
+        factionIds: loaded.factionIds,
+        socialStatus: loaded.socialStatus,
+        relationships: loaded.relationships,
+        notes: loaded.notes,
+      })
+      const raw = await readFile(characterFile(novelFolder, 'c-legacy-5'), 'utf-8')
+      const parsed = JSON.parse(raw) as Record<string, unknown>
+      expect('factionId' in parsed).toBe(false)
+      expect(parsed.factionIds).toEqual(['f-imperial'])
+    })
   })
 })

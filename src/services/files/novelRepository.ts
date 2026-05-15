@@ -71,8 +71,9 @@ export async function listNovels(workspaceRoot: string): Promise<Novel[]> {
       if (!folderStat.isDirectory()) continue
       const novel = await readNovel(folder)
       result.push(novel)
-    } catch {
-      // 略過非小說資料夾或缺 novel.json 的目錄
+    } catch (err) {
+      if ((err as NodeJS.ErrnoException).code === 'ENOENT') continue
+      throw err
     }
   }
   return result

@@ -39,9 +39,9 @@ describe('WorldviewTab', () => {
     setActivePinia(createPinia())
   })
 
-  it('mount 時呼叫 novel.read 並傳入 novelId', async () => {
+  it('mount 時呼叫 novel.read 並傳入 novelDir', async () => {
     const api = setupApi(makeNovel())
-    mount(WorldviewTab, { props: { novelId: 'n1' } })
+    mount(WorldviewTab, { props: { novelDir: 'n1' } })
     await flush()
     expect(api.novel.read).toHaveBeenCalledWith('n1')
   })
@@ -49,15 +49,15 @@ describe('WorldviewTab', () => {
   it('新增條目後 → 呼叫 novel.write 並 payload 帶完整 novel 物件，worldview 反映新內容', async () => {
     const novel = makeNovel({ name: '我的世界', style: '輕鬆' })
     const api = setupApi(novel)
-    const wrapper = mount(WorldviewTab, { props: { novelId: 'n1' } })
+    const wrapper = mount(WorldviewTab, { props: { novelDir: 'n1' } })
     await flush()
     await wrapper.get('[data-testid="worldview-new-title"]').setValue('魔法系統')
     await wrapper.get('[data-testid="worldview-new-content"]').setValue('元素四系。')
     await wrapper.get('[data-testid="worldview-add"]').trigger('click')
     await flush()
     expect(api.novel.write).toHaveBeenCalledTimes(1)
-    const [novelId, payload] = api.novel.write.mock.calls[0] as unknown as [string, Novel]
-    expect(novelId).toBe('n1')
+    const [novelDir, payload] = api.novel.write.mock.calls[0] as unknown as [string, Novel]
+    expect(novelDir).toBe('n1')
     expect(payload.name).toBe('我的世界')
     expect(payload.style).toBe('輕鬆')
     expect(payload.worldview).toHaveLength(1)
@@ -65,12 +65,24 @@ describe('WorldviewTab', () => {
     expect(payload.worldview[0]?.content).toBe('元素四系。')
   })
 
+  it('novel.write payload 必須是可被 structuredClone 的純物件（contextBridge 邊界）', async () => {
+    const novel = makeNovel()
+    const api = setupApi(novel)
+    const wrapper = mount(WorldviewTab, { props: { novelDir: 'n1' } })
+    await flush()
+    await wrapper.get('[data-testid="worldview-new-title"]').setValue('魔法系統')
+    await wrapper.get('[data-testid="worldview-add"]').trigger('click')
+    await flush()
+    const [, payload] = api.novel.write.mock.calls[0] as unknown as [string, unknown]
+    expect(() => structuredClone(payload)).not.toThrow()
+  })
+
   it('更新既有條目後 → novel.write payload worldview 反映新值', async () => {
     const novel = makeNovel({
       worldview: [{ id: 'wv-1', title: '原標題', content: '原內容' }],
     })
     const api = setupApi(novel)
-    const wrapper = mount(WorldviewTab, { props: { novelId: 'n1' } })
+    const wrapper = mount(WorldviewTab, { props: { novelDir: 'n1' } })
     await flush()
     const titleInput = wrapper.get('[data-testid="worldview-title-wv-1"]')
     await titleInput.setValue('新標題')

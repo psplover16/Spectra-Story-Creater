@@ -4,6 +4,7 @@ import { ref } from 'vue'
 import SettingsView from '@/views/SettingsView.vue'
 
 const props = defineProps<{
+  novelDir: string
   novelId: string
 }>()
 

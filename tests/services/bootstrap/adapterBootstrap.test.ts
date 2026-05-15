@@ -60,8 +60,8 @@ describe('adapterBootstrap', () => {
     expect(result.availability).toEqual({ codex: true, claude: true })
   })
 
-  it('adapter.invoke 走 window.api.ai.invoke 既有 channel（不引入新 IPC）', async () => {
-    const fakeInvoke = vi.fn(async () => ({
+  it('adapter.invoke 走 window.api.ai.invoke 既有 channel，並傳 source 為第一參數', async () => {
+    const fakeInvoke = vi.fn(async (_source: string, _input: unknown) => ({
       text: 'hello',
       source: 'codex' as const,
       durationMs: 1,
@@ -89,6 +89,38 @@ describe('adapterBootstrap', () => {
       role: 'plot-driver',
     })
     expect(fakeInvoke).toHaveBeenCalledTimes(1)
+    expect(fakeInvoke.mock.calls[0]?.[0]).toBe('codex')
     expect(out.text).toBe('hello')
+  })
+
+  it('createRendererAdapter("claude") 呼叫 invoke 時 source 為 claude', async () => {
+    const fakeInvoke = vi.fn(async (_source: string, _input: unknown) => ({
+      text: 'claude reply',
+      source: 'claude' as const,
+      durationMs: 1,
+    }))
+    ;(globalThis as unknown as { window: unknown }).window = {
+      api: {
+        ai: { invoke: fakeInvoke },
+      },
+    }
+
+    const { claude } = await bootstrapAdapters({ probe: probeReturning(true, true) })
+    await claude.invoke({
+      context: {
+        worldview: [],
+        characters: [],
+        overallPlot: { summary: '', chapters: [] },
+        presentCharacters: [],
+        chapterOutline: { chapterId: 'c1', outline: '' },
+        chapterScene: {
+          chapterId: 'c1',
+          scene: { time: '', location: '', weather: '', props: [], mood: '' },
+        },
+      },
+      prompt: 'hi',
+      role: 'plot-driver',
+    })
+    expect(fakeInvoke.mock.calls[0]?.[0]).toBe('claude')
   })
 })

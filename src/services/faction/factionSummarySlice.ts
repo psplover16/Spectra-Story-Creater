@@ -8,7 +8,9 @@ export function buildFactionSummarySlices(
 ): FactionSummarySlice[] {
   const presentFactionIds = new Set<string>()
   for (const character of presentCharacters) {
-    if (character.factionId !== null) presentFactionIds.add(character.factionId)
+    for (const fid of character.factionIds) {
+      presentFactionIds.add(fid)
+    }
   }
   return factions
     .filter((f) => presentFactionIds.has(f.id))

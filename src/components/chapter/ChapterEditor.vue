@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, reactive, watch } from 'vue'
+import { computed, reactive } from 'vue'
 
 import type { Chapter } from '@/types/chapter'
 
@@ -11,14 +11,10 @@ const emit = defineEmits<{
   save: [chapter: Chapter]
 }>()
 
+// draft 只在 mount 時用 props 初始化；切換章節由父層 :key="chapter.id" 強制 re-mount 處理。
+// 不 watch props.chapter，避免「同章節內 props 因為其他副作用（例如勾選在場角色觸發整章 save）
+// 而更新 reference」時把使用者尚未儲存的 outline / content 草稿覆蓋掉。
 const draft = reactive<Chapter>({ ...props.chapter })
-
-watch(
-  () => props.chapter,
-  (next) => {
-    Object.assign(draft, next)
-  },
-)
 
 const isContentDisabled = computed(() => draft.outline.trim() === '')
 

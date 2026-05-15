@@ -81,7 +81,7 @@ describe('smoke: 吸血鬼短篇走 IPC handlers', () => {
       abilities: ['銀十字劍術', '夜視', '快馬'],
       appearance: '黑髮綁辮，紅色長外套，腰側佩短劍',
       socialStatus: '自由獵人，受銀十字團委託',
-      factionId: silverCross.id,
+      factionIds: [silverCross.id],
       notes: '父母於十年前死於吸血鬼之手',
     })
     const lucien = await characterHandlers.write(dir, {
@@ -90,7 +90,7 @@ describe('smoke: 吸血鬼短篇走 IPC handlers', () => {
       abilities: ['霧化', '魅惑', '不死之軀'],
       appearance: '純白襯衫覆灰色長禮服，眼瞳泛淡紅',
       socialStatus: '黑紗會領主',
-      factionId: blackSilk.id,
+      factionIds: [blackSilk.id],
       relationships: [
         { targetCharacterId: maria.id, kind: '宿敵', description: '感應到 Maria 的血脈來歷' },
       ],

@@ -2,11 +2,12 @@
 import { onMounted, ref } from 'vue'
 
 import ChapterList from '@/components/chapter/ChapterList.vue'
+import { toPlain } from '@/services/ipc/toPlain'
 import { useWorkspaceStore } from '@/stores/workspace'
 import type { Chapter } from '@/types/chapter'
 
 const props = defineProps<{
-  novelId: string
+  novelDir: string
 }>()
 
 const emit = defineEmits<{
@@ -18,7 +19,7 @@ const chapters = ref<Chapter[]>([])
 const workspace = useWorkspaceStore()
 
 async function reload(): Promise<void> {
-  const list = (await window.api.chapter.list(props.novelId)) as Chapter[]
+  const list = (await window.api.chapter.list(props.novelDir)) as Chapter[]
   chapters.value = Array.isArray(list) ? list : []
 }
 
@@ -49,12 +50,13 @@ async function createChapter(): Promise<void> {
     createdAt: now,
     updatedAt: now,
   }
-  await window.api.chapter.write(props.novelId, chapter)
+  await window.api.chapter.write(props.novelDir, toPlain(chapter))
   await reload()
+  emit('open-chapter', chapter.id)
 }
 
 async function deleteChapter(chapterId: string): Promise<void> {
-  await window.api.chapter.delete(props.novelId, chapterId)
+  await window.api.chapter.delete(props.novelDir, chapterId)
   await reload()
 }
 </script>

@@ -43,9 +43,9 @@ describe('FactionsTab', () => {
     setActivePinia(createPinia())
   })
 
-  it('mount 時呼叫 faction.list 並傳入 novelId', async () => {
+  it('mount 時呼叫 faction.list 並傳入 novelDir', async () => {
     const api = setupApi([])
-    mount(FactionsTab, { props: { novelId: 'n1' } })
+    mount(FactionsTab, { props: { novelDir: 'n1' } })
     await flush()
     expect(api.faction.list).toHaveBeenCalledWith('n1')
   })
@@ -53,7 +53,7 @@ describe('FactionsTab', () => {
   it('選擇某 faction 後編輯並送出 → 呼叫 faction.write', async () => {
     const factions = [makeFaction({ id: 'f1', name: '天地會' })]
     const api = setupApi(factions)
-    const wrapper = mount(FactionsTab, { props: { novelId: 'n1' } })
+    const wrapper = mount(FactionsTab, { props: { novelDir: 'n1' } })
     await flush()
     await wrapper.get('[data-testid="faction-f1"]').trigger('click')
     await flush()
@@ -70,7 +70,7 @@ describe('FactionsTab', () => {
   it('按下「成員視圖」按鈕後 members 視圖可見、預設不可見', async () => {
     const factions = [makeFaction({ id: 'f1', name: '天地會' })]
     setupApi(factions)
-    const wrapper = mount(FactionsTab, { props: { novelId: 'n1' } })
+    const wrapper = mount(FactionsTab, { props: { novelDir: 'n1' } })
     await flush()
     await wrapper.get('[data-testid="faction-f1"]').trigger('click')
     await flush()

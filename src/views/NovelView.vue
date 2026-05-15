@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 
-export type NovelTab = 'characters' | 'chapters' | 'factions' | 'worldview' | 'settings'
+export type NovelTab = 'characters' | 'chapters' | 'factions' | 'worldview' | 'equipment' | 'settings'
 
 const TAB_LABELS: Record<NovelTab, string> = {
   characters: '角色',
   chapters: '章節',
   factions: '陣營',
   worldview: '世界觀',
+  equipment: '裝備',
   settings: '設定',
 }
 
@@ -56,6 +57,9 @@ defineExpose({ activeTab })
       </div>
       <div v-else-if="activeTab === 'worldview'" data-testid="panel-worldview">
         <slot name="worldview" />
+      </div>
+      <div v-else-if="activeTab === 'equipment'" data-testid="panel-equipment">
+        <slot name="equipment" />
       </div>
       <div v-else-if="activeTab === 'settings'" data-testid="panel-settings">
         <slot name="settings" />

@@ -30,7 +30,7 @@ export async function applyDriftSuggestion(input: ApplyDriftSuggestionInput): Pr
     personality: nextPersonality,
     abilities: existing.abilities,
     appearance: existing.appearance,
-    factionId: existing.factionId,
+    factionIds: existing.factionIds,
     socialStatus: existing.socialStatus,
     relationships: existing.relationships,
     notes: existing.notes,

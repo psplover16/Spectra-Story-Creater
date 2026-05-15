@@ -45,16 +45,16 @@ describe('ChaptersTab', () => {
     setActivePinia(createPinia())
   })
 
-  it('mount 時呼叫 chapter.list 並傳入 novelId', async () => {
+  it('mount 時呼叫 chapter.list 並傳入 novelDir', async () => {
     const api = setupApi([])
-    mount(ChaptersTab, { props: { novelId: 'n1' } })
+    mount(ChaptersTab, { props: { novelDir: 'n1' } })
     await flush()
     expect(api.chapter.list).toHaveBeenCalledWith('n1')
   })
 
   it('點章節列表項時 emit open-chapter 帶 chapter id', async () => {
     setupApi([makeChapter({ id: 'ch1', index: 1, title: '第一章' })])
-    const wrapper = mount(ChaptersTab, { props: { novelId: 'n1' } })
+    const wrapper = mount(ChaptersTab, { props: { novelDir: 'n1' } })
     await flush()
     await wrapper.get('[data-testid="chapter-ch1"]').trigger('click')
     const events = wrapper.emitted('open-chapter')
@@ -66,7 +66,7 @@ describe('ChaptersTab', () => {
     setupApi([makeChapter({ id: 'ch1', index: 1, title: '第一章' })])
     const store = useWorkspaceStore()
     store.openChapterTab('ch1', '第一章')
-    const wrapper = mount(ChaptersTab, { props: { novelId: 'n1' } })
+    const wrapper = mount(ChaptersTab, { props: { novelDir: 'n1' } })
     await flush()
     await wrapper.get('[data-testid="chapter-ch1"]').trigger('click')
     const open = wrapper.emitted('open-chapter')
@@ -78,13 +78,25 @@ describe('ChaptersTab', () => {
 
   it('新增按鈕呼叫 chapter.write 建出新章節', async () => {
     const api = setupApi([])
-    const wrapper = mount(ChaptersTab, { props: { novelId: 'n1' } })
+    const wrapper = mount(ChaptersTab, { props: { novelDir: 'n1' } })
     await flush()
     await wrapper.get('[data-testid="chapter-create"]').trigger('click')
     await flush()
     expect(api.chapter.write).toHaveBeenCalledTimes(1)
-    const [novelId, payload] = api.chapter.write.mock.calls[0] as [string, Chapter]
-    expect(novelId).toBe('n1')
+    const [novelDir, payload] = api.chapter.write.mock.calls[0] as [string, Chapter]
+    expect(novelDir).toBe('n1')
     expect(payload.title).toBeTruthy()
+  })
+
+  it('新增章節後 emit open-chapter 帶新章節 id（自動跳到編輯畫面）', async () => {
+    const api = setupApi([])
+    const wrapper = mount(ChaptersTab, { props: { novelDir: 'n1' } })
+    await flush()
+    await wrapper.get('[data-testid="chapter-create"]').trigger('click')
+    await flush()
+    const [, payload] = api.chapter.write.mock.calls[0] as [string, Chapter]
+    const events = wrapper.emitted('open-chapter')
+    expect(events).toBeTruthy()
+    expect(events?.[events.length - 1]).toEqual([payload.id])
   })
 })

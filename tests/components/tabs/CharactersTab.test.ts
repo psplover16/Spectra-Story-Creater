@@ -12,10 +12,11 @@ function makeCharacter(overrides: Partial<Character> & { id: string; name: strin
     personality: '',
     abilities: [],
     appearance: '',
-    factionId: null,
+    factionIds: [],
     socialStatus: '',
     relationships: [],
     notes: '',
+    equipment: [],
     createdAt: '2026-05-13T00:00:00.000Z',
     updatedAt: '2026-05-13T00:00:00.000Z',
     ...overrides,
@@ -30,12 +31,12 @@ interface CharacterApi {
 }
 
 function setupApi(initialList: Character[] = []): { character: CharacterApi } {
-  const list = vi.fn(async (_novelId: string) => initialList)
-  const read = vi.fn(async (_novelId: string, characterId: string) => {
+  const list = vi.fn(async (_novelDir: string) => initialList)
+  const read = vi.fn(async (_novelDir: string, characterId: string) => {
     return initialList.find((c) => c.id === characterId) ?? null
   })
-  const write = vi.fn(async (_novelId: string, _character: unknown) => undefined)
-  const del = vi.fn(async (_novelId: string, _characterId: string) => undefined)
+  const write = vi.fn(async (_novelDir: string, _character: unknown) => undefined)
+  const del = vi.fn(async (_novelDir: string, _characterId: string) => undefined)
   const character: CharacterApi = { list, read, write, delete: del }
   ;(window as unknown as { api: unknown }).api = { character }
   return { character }
@@ -50,16 +51,16 @@ describe('CharactersTab', () => {
     setActivePinia(createPinia())
   })
 
-  it('mount 時呼叫 window.api.character.list 並傳入 novelId', async () => {
+  it('mount 時呼叫 window.api.character.list 並傳入 novelDir', async () => {
     const api = setupApi([])
-    mount(CharactersTab, { props: { novelId: 'n1' } })
+    mount(CharactersTab, { props: { novelDir: 'n1' } })
     await flush()
     expect(api.character.list).toHaveBeenCalledWith('n1')
   })
 
   it('點「新增」後送出 editor 會呼叫 character.write', async () => {
     const api = setupApi([])
-    const wrapper = mount(CharactersTab, { props: { novelId: 'n1' } })
+    const wrapper = mount(CharactersTab, { props: { novelDir: 'n1' } })
     await flush()
     await wrapper.get('[data-testid="character-create"]').trigger('click')
     await wrapper.get('[data-testid="character-name"]').setValue('新角色')
@@ -72,10 +73,10 @@ describe('CharactersTab', () => {
     )
   })
 
-  it('刪除按鈕呼叫 character.delete 並帶 novelId 與 character id', async () => {
+  it('刪除按鈕呼叫 character.delete 並帶 novelDir 與 character id', async () => {
     const list = [makeCharacter({ id: 'c1', name: '甲' })]
     const api = setupApi(list)
-    const wrapper = mount(CharactersTab, { props: { novelId: 'n1' } })
+    const wrapper = mount(CharactersTab, { props: { novelDir: 'n1' } })
     await flush()
     await wrapper.get('[data-testid="character-甲"]').trigger('click')
     await wrapper.get('[data-testid="character-delete"]').trigger('click')
@@ -85,7 +86,7 @@ describe('CharactersTab', () => {
 
   it('不呼叫任何不存在於 character 命名空間的 channel', async () => {
     const api = setupApi([makeCharacter({ id: 'c1', name: '甲' })])
-    const wrapper = mount(CharactersTab, { props: { novelId: 'n1' } })
+    const wrapper = mount(CharactersTab, { props: { novelDir: 'n1' } })
     await flush()
     await wrapper.get('[data-testid="character-create"]').trigger('click')
     await wrapper.get('[data-testid="character-name"]').setValue('新')

@@ -30,7 +30,21 @@ export function buildPrompt(input: PromptBuilderInput): string {
   )
   sections.push(
     `# 2. 角色（依相關性排序）\n${context.characters
-      .map((c) => `- ${c.name}（${c.personality}），能力：${c.abilities.join('、')}`)
+      .map((c) => {
+        const line = `- ${c.name}（${c.personality}），能力：${c.abilities.join('、')}`
+        if (!c.equipment || c.equipment.length === 0) return line
+        const equipmentLines = c.equipment
+          .map((eq) => {
+            const head = eq.hasEffect
+              ? `  - ${eq.name}（${eq.kind}）：${eq.effect}`
+              : `  - ${eq.name}（${eq.kind}）：（明確標示無真正效果）`
+            if (!eq.hasExtra) return head
+            const extraText = eq.extraEffect !== '' ? eq.extraEffect : '（明確標示無額外效果）'
+            return `${head}\n    - 額外效果：${extraText}`
+          })
+          .join('\n')
+        return `${line}\n  持有裝備：\n${equipmentLines}`
+      })
       .join('\n')}`,
   )
   sections.push(

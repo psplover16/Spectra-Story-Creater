@@ -11,10 +11,11 @@ function ch(id: string, factionId: string | null): Character {
     personality: '',
     abilities: [],
     appearance: '',
-    factionId,
+    factionIds: factionId === null ? [] : [factionId],
     socialStatus: '',
     relationships: [],
     notes: '',
+    equipment: [],
     createdAt: '',
     updatedAt: '',
   }

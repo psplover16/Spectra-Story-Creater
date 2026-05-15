@@ -26,8 +26,11 @@ function createRendererAdapter(source: AiSource): AiAdapter {
       if (!api?.ai?.invoke) {
         throw new Error('window.api.ai.invoke is not available in this environment')
       }
-      const invoke = api.ai.invoke as (input: AiInvokeInput) => Promise<AiInvokeResult>
-      const result = await invoke(input)
+      const invoke = api.ai.invoke as (
+        source: AiSource,
+        input: AiInvokeInput,
+      ) => Promise<AiInvokeResult>
+      const result = await invoke(source, input)
       return { ...result, source }
     },
   }

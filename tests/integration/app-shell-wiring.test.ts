@@ -71,9 +71,10 @@ function fixtureCharacter(): Character {
     abilities: ['銀十字劍術'],
     appearance: '黑髮綁辮',
     socialStatus: '自由獵人',
-    factionId: null,
+    factionIds: [],
     relationships: [],
     notes: '',
+    equipment: [],
     createdAt: '',
     updatedAt: '',
   }

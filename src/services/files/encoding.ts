@@ -1,4 +1,4 @@
-import { readFile, writeFile } from 'node:fs/promises'
+import { readFile, rename, writeFile } from 'node:fs/promises'
 
 export class EncodingError extends Error {
   constructor(
@@ -44,4 +44,13 @@ export async function writeUtf8Text(filePath: string, text: string): Promise<voi
     text = text.slice(1)
   }
   await writeFile(filePath, text, { encoding: 'utf-8' })
+}
+
+export async function writeUtf8TextAtomic(filePath: string, text: string): Promise<void> {
+  if (text.length > 0 && text.charCodeAt(0) === 0xfeff) {
+    text = text.slice(1)
+  }
+  const tmp = `${filePath}.tmp`
+  await writeFile(tmp, text, { encoding: 'utf-8' })
+  await rename(tmp, filePath)
 }

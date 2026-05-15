@@ -7,7 +7,16 @@ const srcAlias = {
   '@': path.resolve(__dirname, 'src'),
 }
 
-const nodeExternals = ['electron', 'node:fs', 'node:fs/promises', 'node:path', 'node:url', 'node:os', 'node:crypto']
+const nodeExternals = [
+  'electron',
+  'node:child_process',
+  'node:crypto',
+  'node:fs',
+  'node:fs/promises',
+  'node:os',
+  'node:path',
+  'node:url',
+]
 
 export default defineConfig({
   plugins: [
@@ -26,6 +35,10 @@ export default defineConfig({
             },
             rollupOptions: {
               external: nodeExternals,
+              output: {
+                format: 'cjs',
+                inlineDynamicImports: true,
+              },
             },
           },
         },

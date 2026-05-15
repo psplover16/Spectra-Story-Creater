@@ -12,6 +12,7 @@ const fullContext: AssembledContext = {
       personality: '',
       abilities: [],
       factionId: null,
+      equipment: [],
       score: 0,
     },
   ],

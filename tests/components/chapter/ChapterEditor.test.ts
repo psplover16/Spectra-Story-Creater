@@ -36,4 +36,17 @@ describe('ChapterEditor', () => {
       .element as HTMLTextAreaElement
     expect(content.disabled).toBe(false)
   })
+
+  it('同章節內 props.chapter 變新 reference 時 → 不覆寫 draft（避免勾選在場角色時清空 outline）', async () => {
+    const chapter = ch('')
+    const wrapper = mount(ChapterEditor, { props: { chapter } })
+    await wrapper.get('[data-testid="chapter-outline"]').setValue('使用者打了一半的大綱')
+    // 模擬父層 refresh：同 id 但新 reference、outline 仍是檔案上的空字串
+    await wrapper.setProps({
+      chapter: { ...chapter, presentCharacters: ['c1'] },
+    })
+    const outline = wrapper.get<HTMLTextAreaElement>('[data-testid="chapter-outline"]')
+      .element as HTMLTextAreaElement
+    expect(outline.value).toBe('使用者打了一半的大綱')
+  })
 })

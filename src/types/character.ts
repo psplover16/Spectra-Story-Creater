@@ -3,6 +3,8 @@
  * 規格：novel-data-model（Character file structure）、character-evolution（DriftFinding）。
  */
 
+import type { EquipmentReference } from './equipment'
+
 export interface Relationship {
   targetCharacterId: string
   kind: string
@@ -15,10 +17,11 @@ export interface Character {
   personality: string
   abilities: string[]
   appearance: string
-  factionId: string | null
+  factionIds: string[]
   socialStatus: string
   relationships: Relationship[]
   notes: string
+  equipment: EquipmentReference[]
   createdAt: string
   updatedAt: string
 }

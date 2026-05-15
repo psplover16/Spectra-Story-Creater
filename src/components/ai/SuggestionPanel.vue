@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-
 import SuggestionSourceBadge from '@/components/ai/SuggestionSourceBadge.vue'
 import type { AiSource, HitLayer } from '@/types/ai'
+import type { AuditFinding, AuditResult } from '@/types/audit'
 
 export interface SuggestionContent {
   /** 具體可採用的方案描述（D8 強建議內容） */
@@ -11,20 +10,49 @@ export interface SuggestionContent {
   hitLayer: HitLayer
 }
 
-defineProps<{
-  current: SuggestionContent | null
-}>()
+const props = withDefaults(
+  defineProps<{
+    current: SuggestionContent | null
+    isLoading?: boolean
+    pendingFindings?: AuditResult | null
+    pendingFindingsInconclusive?: boolean
+  }>(),
+  {
+    isLoading: false,
+    pendingFindings: null,
+    pendingFindingsInconclusive: false,
+  },
+)
 
 const emit = defineEmits<{
   request: []
 }>()
 
-const isLoading = ref(false)
+function categoryLabel(category: AuditFinding['category']): string {
+  switch (category) {
+    case 'ooc':
+      return '角色 OOC'
+    case 'unexplained-ability':
+      return '能力憑空出現'
+    case 'relationship-conflict':
+      return '關係矛盾'
+    case 'worldview-conflict':
+      return '世界觀矛盾'
+    case 'timeline-conflict':
+      return '時間線錯亂'
+    default:
+      return category
+  }
+}
 
-async function requestSuggestion(): Promise<void> {
-  isLoading.value = true
+function findingsArray(result: AuditResult | null): AuditFinding[] {
+  if (result === null) return []
+  if (result.kind === 'findings') return result.findings
+  return []
+}
+
+function requestSuggestion(): void {
   emit('request')
-  isLoading.value = false
 }
 </script>
 
@@ -33,16 +61,40 @@ async function requestSuggestion(): Promise<void> {
     <button
       type="button"
       data-testid="suggestion-request"
-      :disabled="isLoading"
+      :disabled="props.isLoading"
       class="px-3 py-1 rounded-md bg-slate-800 text-white text-sm disabled:opacity-50"
       @click="requestSuggestion"
     >
       給我建議
     </button>
-    <div v-if="current" data-testid="suggestion-content" class="p-3 bg-slate-50 rounded-md">
-      <SuggestionSourceBadge :source="current.source" :hit-layer="current.hitLayer" />
+    <div v-if="props.current" data-testid="suggestion-content" class="p-3 bg-slate-50 rounded-md">
+      <SuggestionSourceBadge :source="props.current.source" :hit-layer="props.current.hitLayer" />
       <p class="mt-1" data-testid="suggestion-actionable">
-        {{ current.actionableSuggestion }}
+        {{ props.current.actionableSuggestion }}
+      </p>
+    </div>
+    <div
+      v-if="props.pendingFindings !== null"
+      data-testid="suggestion-findings-warning"
+      class="p-3 rounded-md border border-red-300 bg-red-50 text-sm text-red-800"
+    >
+      <p class="font-medium">本建議與既有設定不一致</p>
+      <ul v-if="findingsArray(props.pendingFindings).length > 0" class="mt-1 space-y-1 list-disc list-inside">
+        <li
+          v-for="(f, idx) in findingsArray(props.pendingFindings)"
+          :key="idx"
+          data-testid="suggestion-finding-item"
+        >
+          <span class="font-medium">{{ categoryLabel(f.category) }}</span
+          ><span class="text-slate-700">：{{ f.evidence }}</span>
+        </li>
+      </ul>
+      <p
+        v-if="props.pendingFindingsInconclusive"
+        data-testid="suggestion-findings-inconclusive"
+        class="mt-1 text-xs text-red-700"
+      >
+        部分偵測無法確定，請審慎採用。
       </p>
     </div>
   </section>

@@ -5,6 +5,7 @@
 
 import type { Character } from './character'
 import type { Chapter, Scene } from './chapter'
+import type { ResolvedEquipment } from './equipment'
 import type { FactionSummary, OutlineChapterRef, WorldviewEntry } from './novel'
 
 export type AiSource = 'codex' | 'claude'
@@ -63,6 +64,7 @@ export interface CharacterSlice {
   personality: string
   abilities: string[]
   factionId: string | null
+  equipment: ResolvedEquipment[]
   score: number
 }
 

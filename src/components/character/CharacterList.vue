@@ -16,9 +16,9 @@ const emit = defineEmits<{
 const filtered = computed<Character[]>(() => {
   if (props.factionFilter === null) return props.characters
   if (props.factionFilter === '__none__') {
-    return props.characters.filter((c) => c.factionId === null)
+    return props.characters.filter((c) => c.factionIds.length === 0)
   }
-  return props.characters.filter((c) => c.factionId === props.factionFilter)
+  return props.characters.filter((c) => c.factionIds.includes(props.factionFilter as string))
 })
 </script>
 
@@ -32,7 +32,7 @@ const filtered = computed<Character[]>(() => {
       @click="emit('select', character.id)"
     >
       {{ character.name }}
-      <span v-if="character.factionId === null" class="text-xs text-slate-500 ml-2">無陣營</span>
+      <span v-if="character.factionIds.length === 0" class="text-xs text-slate-500 ml-2">無陣營</span>
     </li>
     <li v-if="filtered.length === 0" data-testid="character-empty" class="text-slate-400 text-sm">
       無符合條件的角色

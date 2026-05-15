@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive, watch } from 'vue'
+import { reactive } from 'vue'
 
 import type { Scene } from '@/types/chapter'
 
@@ -11,6 +11,9 @@ const emit = defineEmits<{
   update: [scene: Scene]
 }>()
 
+// draft 只在 mount 時初始化；切章節由父層 :key="chapter.id" 強制 re-mount 處理。
+// 不 watch props.scene，避免「同章節內勾選在場角色觸發整章 save」時把使用者尚未按「儲存場景」
+// 的草稿覆蓋掉。
 const draft = reactive<Scene>({
   location: props.scene.location,
   time: props.scene.time,
@@ -18,17 +21,6 @@ const draft = reactive<Scene>({
   props: [...props.scene.props],
   mood: props.scene.mood,
 })
-
-watch(
-  () => props.scene,
-  (next) => {
-    draft.location = next.location
-    draft.time = next.time
-    draft.weather = next.weather
-    draft.props = [...next.props]
-    draft.mood = next.mood
-  },
-)
 
 function save(): void {
   emit('update', {

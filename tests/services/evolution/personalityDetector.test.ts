@@ -10,10 +10,11 @@ function ch(personality: string): Character {
     personality,
     abilities: [],
     appearance: '',
-    factionId: null,
+    factionIds: [],
     socialStatus: '',
     relationships: [],
     notes: '',
+    equipment: [],
     createdAt: '',
     updatedAt: '',
   }

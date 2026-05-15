@@ -29,8 +29,9 @@ export async function listFactions(novelDir: string): Promise<Faction[]> {
     try {
       const f = await readFaction(novelDir, id)
       result.push(f)
-    } catch {
-      // skip
+    } catch (err) {
+      if ((err as NodeJS.ErrnoException).code === 'ENOENT') continue
+      throw err
     }
   }
   return result

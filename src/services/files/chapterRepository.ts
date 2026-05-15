@@ -37,8 +37,9 @@ export async function listChapters(novelDir: string): Promise<Chapter[]> {
     try {
       const ch = await readChapter(novelDir, id)
       result.push(ch)
-    } catch {
-      // 略過壞檔
+    } catch (err) {
+      if ((err as NodeJS.ErrnoException).code === 'ENOENT') continue
+      throw err
     }
   }
   result.sort((a, b) => a.index - b.index)
@@ -131,8 +132,9 @@ export async function listBranches(novelDir: string, chapterId: string): Promise
     try {
       const raw = await readUtf8Text(chapterBranchFile(novelDir, chapterId, branchId))
       result.push(JSON.parse(raw) as ChapterBranch)
-    } catch {
-      // skip
+    } catch (err) {
+      if ((err as NodeJS.ErrnoException).code === 'ENOENT') continue
+      throw err
     }
   }
   result.sort((a, b) => a.branchedAt.localeCompare(b.branchedAt))

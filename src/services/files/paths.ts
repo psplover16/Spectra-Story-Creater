@@ -47,3 +47,11 @@ export function factionHistoryFile(novelDir: string): string {
 export function exportsDir(novelDir: string): string {
   return path.join(novelDir, 'exports')
 }
+
+export function equipmentDir(novelDir: string): string {
+  return path.join(novelDir, 'equipment')
+}
+
+export function equipmentFile(novelDir: string, equipmentId: string): string {
+  return path.join(equipmentDir(novelDir), `${equipmentId}.json`)
+}

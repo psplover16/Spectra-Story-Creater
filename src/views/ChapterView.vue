@@ -14,15 +14,27 @@ import ExportDialog from '@/components/chapter/ExportDialog.vue'
 import { useWorkspaceStore } from '@/stores/workspace'
 
 import type { ExportFormat } from '@/services/export/branchExport'
+import type { AuditResult } from '@/types/audit'
 import type { Chapter, ChapterBranch, Scene } from '@/types/chapter'
 import type { Character } from '@/types/character'
 
-const props = defineProps<{
-  chapters: Chapter[]
-  characters: Character[]
-  branchesByChapter: Record<string, ChapterBranch[]>
-  currentSuggestion?: SuggestionContent | null
-}>()
+const props = withDefaults(
+  defineProps<{
+    chapters: Chapter[]
+    characters: Character[]
+    branchesByChapter: Record<string, ChapterBranch[]>
+    currentSuggestion?: SuggestionContent | null
+    isLoading?: boolean
+    pendingFindings?: AuditResult | null
+    pendingFindingsInconclusive?: boolean
+  }>(),
+  {
+    currentSuggestion: null,
+    isLoading: false,
+    pendingFindings: null,
+    pendingFindingsInconclusive: false,
+  },
+)
 
 const emit = defineEmits<{
   saveChapter: [chapter: Chapter]
@@ -106,7 +118,7 @@ defineExpose({ openChapter, openBranchDialog, openSuggestion, openExport })
       @activate="(id: string) => workspace.openChapterTab(id, id)"
       @close="(id: string) => workspace.closeChapterTab(id)"
     />
-    <div v-if="activeChapter" class="mt-4 grid grid-cols-2 gap-4">
+    <div v-if="activeChapter" :key="activeChapter.id" class="mt-4 grid grid-cols-2 gap-4">
       <div class="space-y-3">
         <SceneEditor :scene="activeChapter.scene" @update="onSceneUpdate" />
         <ParticipantPicker
@@ -131,6 +143,7 @@ defineExpose({ openChapter, openBranchDialog, openSuggestion, openExport })
         <ChapterEditor :chapter="activeChapter" @save="onChapterSave" />
         <div v-if="canShowEntries" class="flex gap-2 mt-3" data-testid="chapter-entries">
           <button
+            v-if="!isSuggestionOpen"
             type="button"
             data-testid="open-suggestion-entry"
             class="px-3 py-1 rounded-md bg-slate-800 text-white text-sm"
@@ -151,6 +164,9 @@ defineExpose({ openChapter, openBranchDialog, openSuggestion, openExport })
           v-if="isSuggestionOpen"
           class="mt-3"
           :current="props.currentSuggestion ?? null"
+          :is-loading="props.isLoading"
+          :pending-findings="props.pendingFindings"
+          :pending-findings-inconclusive="props.pendingFindingsInconclusive"
           @request="onRequestSuggestion"
         />
       </div>

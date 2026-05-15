@@ -10,7 +10,7 @@ export function buildMembershipView(
   factionId: string,
   characters: Character[],
 ): FactionMembershipView {
-  const members = characters.filter((c) => c.factionId === factionId)
+  const members = characters.filter((c) => c.factionIds.includes(factionId))
   return {
     factionId,
     memberCount: members.length,

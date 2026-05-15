@@ -12,6 +12,7 @@ const emptyContext: AssembledContext = {
       personality: '機靈',
       abilities: ['口才'],
       factionId: null,
+      equipment: [],
       score: 5,
     },
   ],

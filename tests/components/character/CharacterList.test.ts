@@ -9,10 +9,11 @@ function makeCharacter(overrides: Partial<Character> & { id: string; name: strin
     personality: '',
     abilities: [],
     appearance: '',
-    factionId: null,
+    factionIds: [],
     socialStatus: '',
     relationships: [],
     notes: '',
+    equipment: [],
     createdAt: '2026-05-13T00:00:00.000Z',
     updatedAt: '2026-05-13T00:00:00.000Z',
     ...overrides,
@@ -21,10 +22,10 @@ function makeCharacter(overrides: Partial<Character> & { id: string; name: strin
 
 describe('CharacterList', () => {
   const chars: Character[] = [
-    makeCharacter({ id: '1', name: '韋小寶', factionId: 'tdh' }),
-    makeCharacter({ id: '2', name: '茅十八', factionId: 'tdh' }),
-    makeCharacter({ id: '3', name: '康熙', factionId: 'court' }),
-    makeCharacter({ id: '4', name: '神祕浪人', factionId: null }),
+    makeCharacter({ id: '1', name: '韋小寶', factionIds: ['tdh'] }),
+    makeCharacter({ id: '2', name: '茅十八', factionIds: ['tdh'] }),
+    makeCharacter({ id: '3', name: '康熙', factionIds: ['court'] }),
+    makeCharacter({ id: '4', name: '神祕浪人', factionIds: [] }),
   ]
 
   it('factionFilter 為某 faction 時，只回傳該 faction 的角色', () => {

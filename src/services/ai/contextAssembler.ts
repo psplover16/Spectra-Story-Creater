@@ -10,6 +10,7 @@ import type {
 } from '@/types/ai'
 import type { Character } from '@/types/character'
 import type { Chapter, Scene } from '@/types/chapter'
+import type { EquipmentItem } from '@/types/equipment'
 import type { Novel } from '@/types/novel'
 
 import { scoreRelevance } from './relevance'
@@ -20,6 +21,7 @@ export interface ContextAssemblerDeps {
   loadNovel(novelId: string): Promise<Novel>
   loadCharacters(novelId: string): Promise<Character[]>
   loadChapters(novelId: string): Promise<Chapter[]>
+  loadEquipment?(novelId: string): Promise<EquipmentItem[]>
 }
 
 export interface AssemblerDiagnostics {
@@ -51,12 +53,17 @@ export function createContextAssembler(deps: ContextAssemblerDeps): ContextAssem
     const novel = await deps.loadNovel(query.novelId)
     const characters = await deps.loadCharacters(query.novelId)
     const chapters = await deps.loadChapters(query.novelId)
+    const equipmentList = deps.loadEquipment ? await deps.loadEquipment(query.novelId) : []
+    const equipmentById = new Map<string, EquipmentItem>()
+    for (const eq of equipmentList) equipmentById.set(eq.id, eq)
     const chapter = chapters.find((c) => c.id === query.chapterId)
     const presentCharIds = new Set(chapter?.presentCharacters ?? [])
     const presentFactionIds = new Set<string>()
     for (const c of characters) {
-      if (presentCharIds.has(c.id) && c.factionId !== null) {
-        presentFactionIds.add(c.factionId)
+      if (presentCharIds.has(c.id)) {
+        for (const fid of c.factionIds) {
+          presentFactionIds.add(fid)
+        }
       }
     }
 
@@ -100,11 +107,33 @@ export function createContextAssembler(deps: ContextAssemblerDeps): ContextAssem
         name: c.name,
         personality: c.personality,
         abilities: c.abilities,
-        factionId: c.factionId,
+        factionId: c.factionIds[0] ?? null,
+        equipment: (c.equipment ?? []).flatMap((ref) => {
+          const item = equipmentById.get(ref.equipmentId)
+          if (!item) {
+            console.warn(
+              `[contextAssembler] dangling equipment reference ${ref.equipmentId} in character ${c.id}`,
+            )
+            return []
+          }
+          const effect = ref.realEffect !== undefined ? ref.realEffect : item.defaultEffect
+          const extraEffect = ref.extraEffect ?? ''
+          return [
+            {
+              id: item.id,
+              name: item.name,
+              kind: item.kind,
+              effect,
+              hasEffect: effect !== '',
+              extraEffect,
+              hasExtra: ref.extraEffect !== undefined,
+            },
+          ]
+        }),
         score: scoreRelevance(
           {
             keywords: [c.name, c.personality],
-            factionId: c.factionId,
+            factionId: c.factionIds[0] ?? null,
             isPresent: presentCharIds.has(c.id),
           },
           { chapterKeywords, presentFactionIds },

@@ -2,10 +2,11 @@
 import { computed, onMounted, ref } from 'vue'
 
 import WorldviewEditor from '@/components/worldview/WorldviewEditor.vue'
+import { toPlain } from '@/services/ipc/toPlain'
 import type { Novel, WorldviewEntry } from '@/types/novel'
 
 const props = defineProps<{
-  novelId: string
+  novelDir: string
 }>()
 
 const novel = ref<Novel | null>(null)
@@ -13,7 +14,7 @@ const novel = ref<Novel | null>(null)
 const entries = computed<WorldviewEntry[]>(() => novel.value?.worldview ?? [])
 
 async function load(): Promise<void> {
-  const loaded = (await window.api.novel.read(props.novelId)) as Novel | null
+  const loaded = (await window.api.novel.read(props.novelDir)) as Novel | null
   novel.value = loaded
 }
 
@@ -30,7 +31,7 @@ async function persist(nextEntries: WorldviewEntry[]): Promise<void> {
     updatedAt: now,
   }
   novel.value = payload
-  await window.api.novel.write(props.novelId, payload)
+  await window.api.novel.write(props.novelDir, toPlain(payload))
 }
 
 async function handleAdd(entry: WorldviewEntry): Promise<void> {

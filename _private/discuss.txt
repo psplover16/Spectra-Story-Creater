@@ -1,9 +1,16 @@
-目前實際使用發生很多bug
+以下需要維修或優化，你要實際透過UI執行一次，而非單純檢查程式碼。
+一. 目前選擇小說之後，選擇 "設定"，以下有一些問題要釐清，以及要優化
+    1. CLI 執行檔路徑，每次開啟專案，會自動填寫 預設值
+    2. 全領 與 本小說，那個功能是啥??
+二. 錯誤提示要處理
+[31780:0515/114409.502:ERROR:CONSOLE(1)] "Unknown VE context: language-mismatch    at new He (devtools://devtools/bundled/ui/legacy/legacy.js:1:98356)
+Error occurred in handler for 'novel:read': Error: ENOENT: no such file or directory, open 'C:\Users\user1\Documents\Spectra-Story-Creater\32ee689d-b641-4f83-abea-6aea9feae143\novel.json'
 
-請你先實際執行目前本專案一遍?
-非單純確認程式正確與否來確認，而是透過實際執行來做檢測。
+三. 選擇腳色，如果針對已經創建的腳色，點選他，會進到編輯頁，但按下儲存沒有反應
 
-利用本專案 完成一個有關吸血鬼的 短篇小說，必須針對目前有的欄位都進行填寫，但內容隨意。
-譬如 設定隨意、腳色隨意、陣營隨意、世界觀隨意、設定隨意，
+四. 世界觀目前無法 CRUD
+五. 陣營，無法編輯，陣營的查看成員目前 沒辦法CRUD
 
-寫2個章節的內容就好，章節簡單能知道程式可以正常運行即可。
+六. 章節的部分，可以新增章節，但針對章節的內容 儲存場景  以及  右邊的 儲存 按鈕 按下去都沒功能
+
+
