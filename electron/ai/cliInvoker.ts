@@ -21,7 +21,7 @@ export interface CliInvokerDeps {
   timeoutMs?: number
 }
 
-const DEFAULT_TIMEOUT_MS = 30000
+const DEFAULT_TIMEOUT_MS = 120000
 
 function resolveTimeout(explicit: number | undefined): number {
   if (typeof explicit === 'number' && Number.isFinite(explicit) && explicit > 0) {
@@ -33,6 +33,27 @@ function resolveTimeout(explicit: number | undefined): number {
     if (Number.isFinite(parsed) && parsed > 0) return parsed
   }
   return DEFAULT_TIMEOUT_MS
+}
+
+const CODEX_EXEC_SUBCMD = 'exec'
+const CLAUDE_PRINT_FLAG = '-p'
+
+function nonInteractiveArg(source: AiSource): string {
+  return source === 'codex' ? CODEX_EXEC_SUBCMD : CLAUDE_PRINT_FLAG
+}
+
+function dispatchSpawnArgs(
+  cliPath: string,
+  source: AiSource,
+): { command: string; args: readonly string[] } {
+  const subcmd = nonInteractiveArg(source)
+  if (process.platform === 'win32') {
+    const lower = cliPath.toLowerCase()
+    if (lower.endsWith('.cmd') || lower.endsWith('.bat')) {
+      return { command: 'cmd.exe', args: ['/d', '/s', '/c', cliPath, subcmd] }
+    }
+  }
+  return { command: cliPath, args: [subcmd] }
 }
 
 export async function invokeCli(
@@ -48,11 +69,12 @@ export async function invokeCli(
   const spawnFn = deps.spawnFn ?? (defaultSpawn as unknown as SpawnFn)
   const timeoutMs = resolveTimeout(deps.timeoutMs)
   const start = Date.now()
+  const { command, args } = dispatchSpawnArgs(cliPath, source)
 
   return new Promise<AiInvokeResult>((resolve, reject) => {
     let child: ChildProcessWithoutNullStreams
     try {
-      child = spawnFn(cliPath, [], {
+      child = spawnFn(command, args, {
         env: buildSpawnEnv(),
         stdio: ['pipe', 'pipe', 'pipe'],
       })

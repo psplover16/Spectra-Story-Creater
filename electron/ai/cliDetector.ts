@@ -5,6 +5,17 @@ import { join } from 'node:path'
 
 const IS_WIN = platform() === 'win32'
 
+const WINDOWS_EXEC_PRIORITY = ['.cmd', '.exe', '.bat'] as const
+
+export function pickWindowsCandidate(lines: readonly string[]): string | null {
+  const normalized = lines.map((s) => s.trim()).filter((s) => s.length > 0)
+  for (const ext of WINDOWS_EXEC_PRIORITY) {
+    const hit = normalized.find((line) => line.toLowerCase().endsWith(ext))
+    if (hit !== undefined) return hit
+  }
+  return null
+}
+
 async function defaultSpawnLookup(name: string): Promise<string | null> {
   return new Promise((resolve) => {
     const cmd = IS_WIN ? 'where' : 'which'
@@ -21,10 +32,12 @@ async function defaultSpawnLookup(name: string): Promise<string | null> {
     proc.on('error', () => resolve(null))
     proc.on('close', (code) => {
       if (code !== 0) return resolve(null)
-      const line = stdout
-        .split(/\r?\n/)
-        .map((s) => s.trim())
-        .find((s) => s.length > 0)
+      const lines = stdout.split(/\r?\n/)
+      if (IS_WIN) {
+        resolve(pickWindowsCandidate(lines))
+        return
+      }
+      const line = lines.map((s) => s.trim()).find((s) => s.length > 0)
       resolve(line ?? null)
     })
   })

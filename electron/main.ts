@@ -3,7 +3,7 @@ import { access, constants } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { detectCli } from './ai/cliDetector'
+import { buildDefaultDeps, resolveCliPath } from './ai/cliPathResolver'
 import { invokeCli } from './ai/cliInvoker'
 import { registerAiHandlers } from './ipc/aiHandlers'
 import { registerCharacterHandlers } from './ipc/characterHandlers'
@@ -14,8 +14,6 @@ import { registerFactionHandlers } from './ipc/factionHandlers'
 import { registerNovelHandlers } from './ipc/novelHandlers'
 import { registerSettingsHandlers } from './ipc/settingsHandlers'
 import { registerWorkspaceHandlers } from './ipc/workspaceHandlers'
-import { readCliSettings } from '../src/services/files/cliSettingsRepository'
-import type { AiSource } from '../src/types/ai'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -76,26 +74,8 @@ function registerDialogHandlers(): void {
   ipcMain.handle('ping', () => 'pong')
 }
 
-async function resolveCliPath(source: AiSource): Promise<string | null> {
-  const cliJsonPath = path.join(app.getPath('userData'), 'cli.json')
-  try {
-    const settings = await readCliSettings(cliJsonPath)
-    const candidate = source === 'codex' ? settings.codex : settings.claude
-    if (typeof candidate === 'string' && candidate.length > 0) {
-      try {
-        await access(candidate, constants.F_OK)
-        return candidate
-      } catch {
-        // 路徑失效，fallthrough 到 cliDetector
-      }
-    }
-  } catch {
-    // cli.json 讀取失敗，fallthrough 到 cliDetector
-  }
-  return await detectCli(source)
-}
-
 function registerAllHandlers(): void {
+  const cliPathResolverDeps = buildDefaultDeps(() => app.getPath('userData'))
   registerDialogHandlers()
   registerWorkspaceHandlers(ipcMain)
   registerNovelHandlers(ipcMain)
@@ -108,7 +88,10 @@ function registerAllHandlers(): void {
     cliSettingsPath: () => path.join(app.getPath('userData'), 'cli.json'),
   })
   registerAiHandlers(ipcMain, {
-    invoke: (source, input) => invokeCli(source, input, { getCliPath: resolveCliPath }),
+    invoke: (source, input) =>
+      invokeCli(source, input, {
+        getCliPath: (s) => resolveCliPath(s, cliPathResolverDeps),
+      }),
   })
 }
 
